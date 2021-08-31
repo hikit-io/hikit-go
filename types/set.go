@@ -1,29 +1,37 @@
 package types
 
+import "errors"
+
 type Set struct {
-	data      map[Any]Empty
-	validType func(elem Any) bool
+	data   map[Any]Void
+	TypeFc func(elem Any) bool
 }
+
+var (
+	TypeErr = errors.New("type limit err")
+)
 
 func NewSet(typeFc TypeFc) *Set {
 	return &Set{
-		validType: typeFc,
-		data:      map[Any]Empty{},
+		TypeFc: typeFc,
+		data:   map[Any]Void{},
 	}
 }
 
-func (s *Set) Add(elem Any) (exist bool, err error) {
-	if s.validType(elem) {
+func (s *Set) Add(elem Any) (ok bool) {
+	if s.TypeFc(elem) {
 		s.data[elem] = _Empty
+		return true
 	}
-	return false, nil
+	panic(TypeErr)
 }
 
-func (s *Set) Del(elem Any) (exist bool, err error) {
-	if s.validType(elem) {
+func (s *Set) Del(elem Any) (ok bool) {
+	if s.TypeFc(elem) {
 		delete(s.data, elem)
+		return true
 	}
-	return false, nil
+	panic(TypeErr)
 }
 
 func (s *Set) Size() int {
@@ -31,11 +39,11 @@ func (s *Set) Size() int {
 }
 
 func (s *Set) Exist(elem Any) bool {
-	if s.validType(elem) {
+	if s.TypeFc(elem) {
 		_, ok := s.data[elem]
 		return ok
 	}
-	return false
+	panic(TypeErr)
 }
 
 func (s *Set) Strings() []string {

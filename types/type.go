@@ -2,6 +2,7 @@ package types
 
 type (
 	Any  interface{}
+	Void = struct{}
 	Str  = string
 	B    = bool
 	F32  = float32
