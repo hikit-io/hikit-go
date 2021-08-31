@@ -21,6 +21,11 @@ type (
 
 type TypeFc func(elem Any) bool
 
+func IsAny(elem Any) B {
+	_, ok := elem.(interface{})
+	return ok
+}
+
 func IsStr(elem Any) B {
 	_, ok := elem.(string)
 	return ok

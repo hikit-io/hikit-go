@@ -5,6 +5,7 @@ import "errors"
 type Set struct {
 	data   map[Any]Void
 	TypeFc func(elem Any) bool
+	init   B
 }
 
 var (
@@ -12,13 +13,30 @@ var (
 )
 
 func NewSet(typeFc TypeFc) *Set {
-	return &Set{
+	s := &Set{
 		TypeFc: typeFc,
 		data:   map[Any]Void{},
 	}
+	s.Init()
+	return s
 }
 
-func (s *Set) Add(elem Any) (ok bool) {
+func (s *Set) Init() {
+	if !s.init {
+		if s.TypeFc == nil {
+			s.TypeFc = IsAny
+		}
+		if s.data == nil {
+			s.data = map[Any]Void{}
+		}
+		s.init = true
+	}
+}
+
+func (s *Set) Add(elem Any) (ok B) {
+	if !s.init {
+		s.Init()
+	}
 	if s.TypeFc(elem) {
 		s.data[elem] = _Empty
 		return true
@@ -26,7 +44,10 @@ func (s *Set) Add(elem Any) (ok bool) {
 	panic(TypeErr)
 }
 
-func (s *Set) Del(elem Any) (ok bool) {
+func (s *Set) Del(elem Any) (ok B) {
+	if !s.init {
+		s.Init()
+	}
 	if s.TypeFc(elem) {
 		delete(s.data, elem)
 		return true
@@ -34,11 +55,11 @@ func (s *Set) Del(elem Any) (ok bool) {
 	panic(TypeErr)
 }
 
-func (s *Set) Size() int {
+func (s *Set) Size() I {
 	return len(s.data)
 }
 
-func (s *Set) Exist(elem Any) bool {
+func (s *Set) Exist(elem Any) B {
 	if s.TypeFc(elem) {
 		_, ok := s.data[elem]
 		return ok
@@ -46,10 +67,10 @@ func (s *Set) Exist(elem Any) bool {
 	panic(TypeErr)
 }
 
-func (s *Set) Strings() []string {
-	var res []string
+func (s *Set) Strings() []Str {
+	var res []Str
 	for any := range s.data {
-		res = append(res, any.(string))
+		res = append(res, any.(Str))
 	}
 	return res
 }
