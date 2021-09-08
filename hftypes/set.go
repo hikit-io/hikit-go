@@ -1,10 +1,10 @@
-package types
+package hftypes
 
 import "errors"
 
 type Set struct {
 	data   map[Any]Void
-	TypeFc func(elem Any) bool
+	TypeFc func(elem Any) B
 	init   B
 }
 

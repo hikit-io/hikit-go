@@ -1,7 +1,7 @@
-package types
+package hftypes
 
 type (
-	Any  interface{}
+	Any  = interface{}
 	Void = struct{}
 	Str  = string
 	B    = bool
