@@ -1,9 +1,10 @@
 package hftypes
 
 type (
-	Empty struct{}
+	empty = struct{}
+	Void  = empty
 )
 
 var (
-	_Empty = Empty{}
+	Empty = empty{}
 )
