@@ -72,7 +72,6 @@ func IsSlice(elem Any) B {
 		fmt.Println(tv.Elem().Kind())
 		return tv.Elem().Kind() == reflect.Slice
 	}
-	fmt.Println(tv.Kind())
 	return tv.Kind() == reflect.Slice
 }
 

@@ -1,4 +1,4 @@
-package mongo
+package hfmongo
 
 import (
 	. "github.com/hfunc/hfunc-go/hftypes"

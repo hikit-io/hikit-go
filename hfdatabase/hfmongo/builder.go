@@ -1,36 +1,48 @@
-package mongo
+package hfmongo
 
 import (
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type Op struct {
-	find map[string]*Filed
+type Builder struct {
+	fields        map[string]*Filed
+	FindOptions   *options.FindOptions
+	UpdateOptions *options.UpdateOptions
 }
 
-func (o *Op) init() {
-	if o.find == nil {
-		o.find = map[string]*Filed{}
-	}
-
-}
-
-func (o *Op) Field(name string) *Filed {
+func (o *Builder) Reset() {
 	o.init()
-	if o.find[name] == nil {
+}
+
+func (o *Builder) init() {
+	if o.fields == nil {
+		o.fields = map[string]*Filed{}
+	}
+	if o.FindOptions == nil {
+		o.FindOptions = options.Find()
+	}
+	if o.UpdateOptions == nil {
+		o.UpdateOptions = options.Update()
+	}
+}
+
+func (o *Builder) Field(name string) *Filed {
+	o.init()
+	if o.fields[name] == nil {
 		field := &Filed{
 			name,
 			D{},
 		}
-		o.find[name] = field
+		o.fields[name] = field
 	}
-	return o.find[name]
+	return o.fields[name]
 }
 
-func (o *Op) Find() bson.D {
+func (o *Builder) Filter() bson.D {
 	o.init()
 	all := bson.D{}
-	for _, filed := range o.find {
+	for _, filed := range o.fields {
 		bsonD := bson.D{}
 		for _, e := range filed.val {
 			if e.opType == OpTypeFind {
@@ -51,10 +63,10 @@ func (o *Op) Find() bson.D {
 	return all
 }
 
-func (o *Op) Update() bson.D {
+func (o *Builder) Update() bson.D {
 	o.init()
 	all := bson.D{}
-	for _, filed := range o.find {
+	for _, filed := range o.fields {
 		opMap := map[OpName]bson.D{}
 		for _, e := range filed.val {
 			if e.opType == OpTypeUpdate {

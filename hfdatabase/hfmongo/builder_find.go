@@ -1,6 +1,6 @@
-package mongo
+package hfmongo
 
-var FindOp = _FindOp{
+var FindOp = findOp{
 	Equal:          "$eq",
 	GreatThan:      "$gt",
 	GreatThanEqual: "$gte",
@@ -19,7 +19,7 @@ var FindOp = _FindOp{
 	Text:           "$Text",
 }
 
-type _FindOp struct {
+type findOp struct {
 	LessThan       string
 	LessThanEqual  string
 	GreatThan      string

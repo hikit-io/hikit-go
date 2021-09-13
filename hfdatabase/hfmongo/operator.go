@@ -1,4 +1,4 @@
-package mongo
+package hfmongo
 
 import (
 	"fmt"
@@ -9,10 +9,10 @@ type Doc interface {
 	Name() string
 }
 
-func (o _UpdateOp) GenPlaceAll(prefix, suffix string) string {
+func (o updateOp) GenPlaceAll(prefix, suffix string) string {
 	return strings.Join([]string{prefix, o.PlaceholderAll, suffix}, ".")
 }
-func (o _UpdateOp) GenPlaceSome(prefix, suffix string) string {
+func (o updateOp) GenPlaceSome(prefix, suffix string) string {
 	return strings.Join([]string{prefix, o.PlaceholderSome, suffix}, ".")
 }
 
@@ -21,7 +21,7 @@ type PlaceIndex struct {
 	indexBase string
 }
 
-func (o _UpdateOp) GenPlaceIndex(prefix, index string) *PlaceIndex {
+func (o updateOp) GenPlaceIndex(prefix, index string) *PlaceIndex {
 	return &PlaceIndex{
 		base:      strings.Join([]string{prefix, fmt.Sprintf(o.PlaceholderIndex, index)}, "."),
 		indexBase: index,
