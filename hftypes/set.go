@@ -38,7 +38,7 @@ func (s *Set) Add(elem Any) (ok B) {
 		s.Init()
 	}
 	if s.TypeFc(elem) {
-		s.data[elem] = _Empty
+		s.data[elem] = Empty
 		return true
 	}
 	panic(TypeErr)

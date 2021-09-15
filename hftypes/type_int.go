@@ -1,5 +1,45 @@
 package hftypes
 
+func IPtr(i I) *I {
+	return &i
+}
+
+func I8Ptr(i I8) *I8 {
+	return &i
+}
+
+func I16Ptr(i I16) *I16 {
+	return &i
+}
+
+func I32Ptr(i I32) *I32 {
+	return &i
+}
+
+func I64Ptr(i I64) *I64 {
+	return &i
+}
+
+func UiPtr(i Ui) *Ui {
+	return &i
+}
+
+func Ui8Ptr(i Ui8) *Ui8 {
+	return &i
+}
+
+func Ui16Ptr(i Ui16) *Ui16 {
+	return &i
+}
+
+func Ui32Ptr(i Ui32) *Ui32 {
+	return &i
+}
+
+func Ui64Ptr(i Ui64) *Ui64 {
+	return &i
+}
+
 func IsUi(elem Any) B {
 	_, ok := elem.(uint)
 	return ok

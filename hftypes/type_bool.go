@@ -1,5 +1,9 @@
 package hftypes
 
+func BPtr(b B) *B {
+	return &b
+}
+
 func IsBool(elem Any) B {
 	switch elem.(type) {
 	case B, *B:
