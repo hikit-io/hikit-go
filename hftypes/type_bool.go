@@ -39,5 +39,12 @@ func ToBool(e Any) B {
 }
 
 func AsBool(e Any) B {
-	return e.(bool)
+	switch el := e.(type) {
+	case B:
+		return el
+	case *B:
+		return *el
+	default:
+		panic("e must be bool or *bool")
+	}
 }

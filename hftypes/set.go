@@ -34,9 +34,7 @@ func (s *Set) Init() {
 }
 
 func (s *Set) Add(elem Any) (ok B) {
-	if !s.init {
-		s.Init()
-	}
+	s.Init()
 	if s.TypeFc(elem) {
 		s.data[elem] = Empty
 		return true
@@ -45,9 +43,7 @@ func (s *Set) Add(elem Any) (ok B) {
 }
 
 func (s *Set) Del(elem Any) (ok B) {
-	if !s.init {
-		s.Init()
-	}
+	s.Init()
 	if s.TypeFc(elem) {
 		delete(s.data, elem)
 		return true

@@ -1,19 +1,38 @@
 package hfhttp
 
 import (
+	"golang.org/x/oauth2"
 	"net"
 	"net/http"
 	"time"
 )
 
-type options struct {
+var (
+	DefaultRoundTripper = http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+)
+
+type clientOptions struct {
 	trans http.RoundTripper
+	oauth oauth2.Config
 }
 
-type Options func(*options)
+type ClientOption interface {
+	apply(options *clientOptions)
+}
 
-func NewClient(opts ...Options) *http.Client {
-	opt := &options{
+func NewClient(opts ...ClientOption) *http.Client {
+	opt := &clientOptions{
 		trans: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
 			DialContext: (&net.Dialer{
@@ -28,15 +47,21 @@ func NewClient(opts ...Options) *http.Client {
 		},
 	}
 	for _, o := range opts {
-		o(opt)
+		o.apply(opt)
 	}
 	return &http.Client{
 		Transport: opt.trans,
 	}
 }
 
-func WithRoundTripper(rt http.RoundTripper) Options {
-	return func(opt *options) {
-		opt.trans = rt
-	}
+type RoundTripper struct {
+	http.RoundTripper
+}
+
+func (r RoundTripper) apply(options *clientOptions) {
+	options.trans = r
+}
+
+func WithRoundTripper(rt http.RoundTripper) ClientOption {
+	return RoundTripper{rt}
 }

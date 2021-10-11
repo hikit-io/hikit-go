@@ -170,30 +170,82 @@ func RangeI8(i64 I64) bool {
 	return i64 >= MinInt8 && i64 <= MaxInt8
 }
 
+func URangeI8(ui64 Ui64) bool {
+	return ui64 <= MaxInt8
+}
+
+func RangeUi8(i64 I64) bool {
+	return i64 >= 0 && i64 <= MaxUint8
+}
+
+func URangeUi8(ui64 Ui64) bool {
+	return ui64 <= MaxUint8
+}
+
 func RangeI16(i64 I64) bool {
 	return i64 >= MinInt16 && i64 <= MaxInt16
+}
+
+func URangeI16(ui64 Ui64) bool {
+	return ui64 <= MaxInt16
+}
+
+func RangeUi16(i64 I64) bool {
+	return i64 >= 0 && i64 <= MaxUint16
+}
+
+func URangeUi16(ui64 Ui64) bool {
+	return ui64 <= MaxUint16
 }
 
 func RangeI32(i64 I64) bool {
 	return i64 >= MinInt32 && i64 <= MaxInt32
 }
 
+func URangeI32(ui64 Ui64) bool {
+	return ui64 <= MaxInt32
+}
+
+func RangeUi32(i64 I64) bool {
+	return i64 >= 0 && i64 <= MaxUint32
+}
+
+func URangeUi32(ui64 Ui64) bool {
+	return ui64 <= MaxUint32
+}
+
+func RangeI64(i64 I64) bool {
+	return i64 >= MinInt64 && i64 <= MaxInt64
+}
+
+func URangeI64(ui64 Ui64) bool {
+	return ui64 <= MaxInt64
+}
+
+func RangeUi64(i64 I64) bool {
+	return i64 >= 0
+}
+
+func URangeUi64(ui64 Ui64) bool {
+	return ui64 <= MaxUint64
+}
+
 func AsI8(e Any) I8 {
 	switch {
 	case IsI8(e):
 		return e.(I8)
-	case IsUi(e) || IsUi8(e) || IsUi16(e) || IsUi32(e) || IsUi64(e):
-		i := AsUi64(e)
-		if RangeI8(I64(i)) {
-			return I8(i)
-		}
-		panic(i)
-	case IsI(e) || IsI16(e) || IsI32(e) || IsI64(e):
+	case IsInt(e):
 		i64 := AsI64(e)
 		if RangeI8(i64) {
 			return I8(i64)
 		}
 		panic(i64)
+	case IsUint(e):
+		i := AsUi64(e)
+		if URangeI8(i) {
+			return I8(i)
+		}
+		panic(i)
 	default:
 		panic("not support")
 	}
@@ -203,22 +255,18 @@ func AsI16(e Any) I16 {
 	switch {
 	case IsI16(e):
 		return e.(I16)
-	case IsI8(e):
-		return I16(AsI8(e))
-	case IsUi8(e):
-		return I16(AsUi8(e))
-	case IsUi(e) || IsUi32(e) || IsUi64(e) || IsUi64(e):
-		i := AsUi64(e)
-		if RangeI16(I64(i)) {
-			return I16(i)
-		}
-		panic(i)
-	case IsI(e) || IsI32(e) || IsI64(e):
+	case IsInt(e):
 		i64 := AsI64(e)
 		if RangeI16(i64) {
 			return I16(i64)
 		}
 		panic(i64)
+	case IsUint(e):
+		i := AsUi64(e)
+		if URangeI16(i) {
+			return I16(i)
+		}
+		panic(i)
 	default:
 		panic("not support")
 	}
@@ -226,13 +274,15 @@ func AsI16(e Any) I16 {
 
 func AsI32(e Any) I32 {
 	switch {
-	case IsUi(e) || IsUi32(e) || IsUi64(e) || IsUi64(e):
+	case IsI32(e):
+		return e.(I32)
+	case IsUint(e):
 		i := AsUi64(e)
-		if RangeI32(I64(i)) {
+		if URangeI32(i) {
 			return I32(i)
 		}
 		panic(i)
-	case IsI(e) || IsI32(e) || IsI64(e) || IsI8(e):
+	case IsInt(e):
 		i64 := AsI64(e)
 		if RangeI32(i64) {
 			return I32(i64)
@@ -255,8 +305,15 @@ func AsI64(e Any) I64 {
 		return I64(AsI32(e))
 	case IsI64(e):
 		return e.(I64)
+	case IsUint(e):
+		ui64 := AsUi64(e)
+		if URangeI64(ui64) {
+			return I64(ui64)
+		}
+		panic(ui64)
+	default:
+		panic("not support type")
 	}
-	panic("not support type")
 }
 
 func AsUi(e Any) Ui {
@@ -265,59 +322,123 @@ func AsUi(e Any) Ui {
 
 func AsUi8(e Any) Ui8 {
 	switch {
-	case IsI(e):
-		return Ui8(AsI(e))
-	case IsI8(e):
-		return Ui8(AsI8(e))
-	case IsI16(e):
-		i16 := AsI16(e)
-		if i16 <= MaxInt8 {
-			return Ui8(i16)
+	case IsUi8(e):
+		return e.(Ui8)
+	case IsUint(e):
+		ui64 := AsUi64(e)
+		if URangeUi8(ui64) {
+			return Ui8(ui64)
 		}
-		return MaxInt8
-	case IsI32(e):
-		i32 := AsI32(e)
-		if i32 <= MaxInt8 {
-			return Ui8(i32)
-		}
-		return MaxInt8
-	case IsI64(e):
+		panic(ui64)
+	case IsInt(e):
 		i64 := AsI64(e)
-		if i64 <= MaxInt8 {
+		if RangeUi8(i64) {
 			return Ui8(i64)
 		}
-		return MaxInt8
+		panic(i64)
 	default:
-		return MaxInt8
+		panic("not support type")
 	}
 }
 
 func AsUi16(e Any) Ui16 {
-	return e.(uint16)
+	switch {
+	case IsUi16(e):
+		return e.(Ui16)
+	case IsUint(e):
+		ui64 := AsUi64(e)
+		if URangeUi16(ui64) {
+			return Ui16(ui64)
+		}
+		panic(ui64)
+	case IsInt(e):
+		i64 := AsI64(e)
+		if RangeUi16(i64) {
+			return Ui16(i64)
+		}
+		panic(i64)
+	default:
+		panic("not support")
+	}
 }
 
 func AsUi32(e Any) Ui32 {
-	return e.(uint32)
+	switch {
+	case IsUi32(e):
+		return e.(Ui32)
+	case IsUint(e):
+		ui64 := AsUi64(e)
+		if URangeUi32(ui64) {
+			return Ui32(ui64)
+		}
+		panic(ui64)
+	case IsInt(e):
+		i64 := AsI64(e)
+		if RangeUi32(i64) {
+			return Ui32(i64)
+		}
+		panic(i64)
+	default:
+		panic("not support")
+	}
 }
 
 func AsUi64(e Any) Ui64 {
-	return e.(uint64)
+	switch {
+	case IsUi(e):
+		return Ui64(AsUi(e))
+	case IsUi8(e):
+		return Ui64(AsUi8(e))
+	case IsUi16(e):
+		return Ui64(AsUi16(e))
+	case IsUi32(e):
+		return Ui64(AsUi32(e))
+	case IsUi64(e):
+		return e.(Ui64)
+	case IsInt(e):
+		i := AsI64(e)
+		if RangeUi64(i) {
+			return Ui64(i)
+		}
+		panic(i)
+	}
+	panic(e)
+}
+
+func RangeI(i64 I64) B {
+	if IntSize == 64 {
+		return i64 <= MaxInt64
+	} else {
+		return i64 <= MaxInt32
+	}
+}
+
+func URangeI(i64 Ui64) B {
+	if IntSize == 64 {
+		return i64 <= MaxInt64
+	} else {
+		return i64 <= MaxInt32
+	}
 }
 
 func AsI(e Any) I {
 	switch {
-	case IsI8(e):
-		return I(AsI8(e))
-	case IsI16(e):
-		return I(AsI16(e))
-	case IsI32(e):
-		return I(AsI32(e))
-	case IsI64(e):
-		return I(AsI64(e))
 	case IsI(e):
 		return e.(I)
+	case IsInt(e):
+		i64 := AsI64(e)
+		if RangeI(i64) {
+			return I(i64)
+		}
+		panic(i64)
+	case IsUint(e):
+		ui64 := AsUi64(e)
+		if URangeI(ui64) {
+			return I(ui64)
+		}
+		panic(ui64)
 	default:
-		return 0
+		panic(e)
 	}
 }
 
