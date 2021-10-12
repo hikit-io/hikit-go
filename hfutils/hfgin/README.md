@@ -1,7 +1,8 @@
 # hfgin
 
-# Feature
+## Feature
 
+## Example 
 ```go
 package main
 
@@ -9,7 +10,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/hfunc/hfunc-go/hfutils/hfgin"
-	"net/http"
 )
 
 type _Controller struct{}
@@ -32,23 +32,49 @@ func (_ _Controller) Middlewares() ([]gin.HandlerFunc, []gin.HandlerFunc) {
 		}
 }
 
-func Ping() hfgin.HandleFunc {
-	return func() (method, routeUri, version string, handlerFuncs []gin.HandlerFunc) {
-		return http.MethodGet, "ping", "v1", []gin.HandlerFunc{
-			func(c *gin.Context) {
-                c.JSON(200,"pong")
-			},
-			func(c *gin.Context) {
-				fmt.Println("subfix")
-				c.Next()
-			},
-		}
+func (_ _Controller) Version() string {
+	return "v1"
+}
+
+func (_ _Controller) GETPing() (routeUri, version string, handlerFuncs []gin.HandlerFunc) {
+	return "ping", "v1", []gin.HandlerFunc{
+		func(c *gin.Context) {
+			c.JSON(200, "pong")
+		},
+		func(c *gin.Context) {
+			fmt.Println("subfix")
+			c.Next()
+		},
+	}
+}
+
+func (_ _Controller) GETHelloHfunc_id() ( version string, handlerFuncs []gin.HandlerFunc) {
+	return  "v1", []gin.HandlerFunc{
+		func(c *gin.Context) {
+			c.JSON(200, "pong")
+		},
+		func(c *gin.Context) {
+			fmt.Println("subfix")
+			c.Next()
+		},
+	}
+}
+
+func (_ _Controller) GETHelloHfunc() ( version string, handlerFuncs []gin.HandlerFunc) {
+	return  "v1", []gin.HandlerFunc{
+		func(c *gin.Context) {
+			c.JSON(200, "pong")
+		},
+		func(c *gin.Context) {
+			fmt.Println("subfix")
+			c.Next()
+		},
 	}
 }
 
 func main() {
 	r := gin.Default()
-	hfgin.RegisterController(r, _Controller{})
+	hfgin.RegisterController(r, &_Controller{})
 	r.Run(":8081")
 }
 ```
