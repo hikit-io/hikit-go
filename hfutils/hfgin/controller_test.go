@@ -17,7 +17,14 @@ func TestMatchUrl(t *testing.T) {
 			args: args{
 				"Hello_idWei",
 			},
-			want: "snake/name",
+			want: "/hello_id/wei",
+		},
+		{
+			name: "",
+			args: args{
+				"Hello_IdWei",
+			},
+			want: "/hello/:id/wei",
 		},
 	}
 	for _, tt := range tests {

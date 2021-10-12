@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"reflect"
+	"regexp"
 	"strings"
 )
 
@@ -127,21 +128,21 @@ func RegisterController(r gin.IRouter, controllers ...Controller) {
 }
 
 func MatchUrl(name string) string {
-	newstr := make([]rune, 0)
-	for idx, chr := range name {
-		if isUpper := 'A' <= chr && chr <= 'Z'; isUpper {
-			if idx > 0 {
-				newstr = append(newstr, '/')
-			}
-			chr -= 'A' - 'a'
-		}
+	r1, _ := regexp.Compile("_[A-Z]")
+	r2, _ := regexp.Compile("[A-Z]")
+	name = r1.ReplaceAllStringFunc(name, func(s string) string {
+		ss := []rune(s)
+		ss[0] = '/'
+		ss = append(ss, ss[1]-('A'-'a'))
+		ss[1] = ':'
+		return string(ss)
+	})
+	name = r2.ReplaceAllStringFunc(name, func(s string) string {
+		ss := []rune(s)
+		ss = append(ss, ss[0]-('A'-'a'))
+		ss[0] = '/'
+		return string(ss)
+	})
 
-		if chr == '_' {
-			chr = '/'
-			newstr = append(newstr, chr, ':')
-			continue
-		}
-		newstr = append(newstr, chr)
-	}
-	return string(newstr)
+	return string(name)
 }
