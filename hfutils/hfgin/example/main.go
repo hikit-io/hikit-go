@@ -1,8 +1,3 @@
-# hfgin
-
-# Feature
-
-```go
 package main
 
 import (
@@ -32,11 +27,15 @@ func (_ _Controller) Middlewares() ([]gin.HandlerFunc, []gin.HandlerFunc) {
 		}
 }
 
-func Ping() hfgin.HandleFunc {
+func (_ _Controller) Version() string {
+	return "v1"
+}
+
+func (_ _Controller) Ping() hfgin.HandleFunc {
 	return func() (method, routeUri, version string, handlerFuncs []gin.HandlerFunc) {
 		return http.MethodGet, "ping", "v1", []gin.HandlerFunc{
 			func(c *gin.Context) {
-                c.JSON(200,"pong")
+				c.JSON(200, "pong")
 			},
 			func(c *gin.Context) {
 				fmt.Println("subfix")
@@ -48,7 +47,6 @@ func Ping() hfgin.HandleFunc {
 
 func main() {
 	r := gin.Default()
-	hfgin.RegisterController(r, _Controller{})
+	hfgin.RegisterController(r, &_Controller{})
 	r.Run(":8081")
 }
-```
