@@ -78,3 +78,9 @@ func main() {
 	r.Run(":8081")
 }
 ```
+result:
+```
+[GIN-debug] GET    /v1/hfunc/hello/hfunc     --> main._Controller.Middlewares.func2 (6 handlers)
+[GIN-debug] GET    /v1/hfunc/hello/hfunc/:id --> main._Controller.Middlewares.func2 (6 handlers)
+[GIN-debug] GET    /v1/hfunc/ping            --> main._Controller.Middlewares.func2 (6 handlers)
+```

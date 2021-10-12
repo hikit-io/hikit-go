@@ -12,12 +12,18 @@ type Controller interface {
 	Middlewares() (prefix, suffix []gin.HandlerFunc)
 }
 
+type HandleFunc func() (method, routeUri, version string, handlerFuncs []gin.HandlerFunc)
 type MethodHandleFunc func() (routeUri, version string, handlerFuncs []gin.HandlerFunc)
 type MethodSnakeHandleFunc func() (version string, handlerFuncs []gin.HandlerFunc)
 
 type NewHandleFunc func() MethodHandleFunc
 
 var (
+	_EmptyHandleFunc = HandleFunc(
+		func() (method, routeUri, version string, handlerFunc []gin.HandlerFunc) {
+			return "", "", "", nil
+		},
+	)
 	_EmptyMethodHandleFunc = MethodHandleFunc(
 		func() (routeUri, version string, handlerFunc []gin.HandlerFunc) {
 			return "", "", nil
@@ -35,17 +41,10 @@ var (
 			return "", nil
 		},
 	)
-	TMethodHandleFunc         = reflect.TypeOf(_EmptyMethodHandleFunc)
-	TNewMethodHandleFunc      = reflect.TypeOf(_EmptyNewMethodHandleFunc)
-	TNewMethodSnakeHandleFunc = reflect.TypeOf(_EmptyMethodSnakeHandleFunc)
+	THandleFunc            = reflect.TypeOf(_EmptyHandleFunc)
+	TMethodHandleFunc      = reflect.TypeOf(_EmptyMethodHandleFunc)
+	TMethodSnakeHandleFunc = reflect.TypeOf(_EmptyMethodSnakeHandleFunc)
 )
-
-//func RegisterHandle(r gin.IRouter, handleFuncs ...MethodHandleFunc) {
-//	for _, handleFunc := range handleFuncs {
-//		 url, version, handles := handleFunc()
-//		r.Group(version).Handle(method, url, handles...)
-//	}
-//}
 
 func MatchMethod(methodName string) string {
 	switch {
@@ -76,16 +75,13 @@ func RegisterController(r gin.IRouter, controllers ...Controller) {
 			prefix, suffix := c.Middlewares()
 			for i := 0; i < v.NumMethod(); i++ {
 				switch {
-				case v.Method(i).Type().ConvertibleTo(TNewMethodHandleFunc):
+				case v.Method(i).Type().ConvertibleTo(THandleFunc):
 					{
-						outs := v.Method(i).Call(nil)
-						f := outs[0].Interface().(MethodHandleFunc)
-						routeUri, version, handlerFunc := f()
-						methodName := v.Type().Method(i).Name
-						httpMethod := MatchMethod(methodName)
+						f := v.Method(i).Convert(THandleFunc).Interface().(HandleFunc)
+						httpMethod, routeUri, version, handlerFunc := f()
 						switch {
 						case version != "" && httpMethod != "":
-							r.Group(version).Group(c.GroupName(), prefix...).Handle(httpMethod, routeUri, append(handlerFunc, suffix...)...).Use()
+							r.Group(version).Group(c.GroupName(), prefix...).Handle(httpMethod, routeUri, append(handlerFunc, suffix...)...)
 							continue
 						case version != "" && httpMethod == "":
 							r.Group(version).Group(c.GroupName(), prefix...).Any(routeUri, append(handlerFunc, suffix...)...)
@@ -94,10 +90,8 @@ func RegisterController(r gin.IRouter, controllers ...Controller) {
 					}
 				case v.Method(i).Type().ConvertibleTo(TMethodHandleFunc):
 					{
-						outs := v.Method(i).Call(nil)
-						routeUri, version, handlerFunc := outs[0].Interface().(string),
-							outs[1].Interface().(string),
-							outs[2].Interface().([]gin.HandlerFunc)
+						f := v.Method(i).Convert(TMethodHandleFunc).Interface().(MethodHandleFunc)
+						routeUri, version, handlerFunc := f()
 						methodName := v.Type().Method(i).Name
 						httpMethod := MatchMethod(methodName)
 						switch {
@@ -109,11 +103,10 @@ func RegisterController(r gin.IRouter, controllers ...Controller) {
 							continue
 						}
 					}
-				case v.Method(i).Type().ConvertibleTo(TNewMethodSnakeHandleFunc):
+				case v.Method(i).Type().ConvertibleTo(TMethodSnakeHandleFunc):
 					{
-						outs := v.Method(i).Call(nil)
-						version, handlerFunc := outs[0].Interface().(string),
-							outs[1].Interface().([]gin.HandlerFunc)
+						f := v.Method(i).Convert(TMethodSnakeHandleFunc).Interface().(MethodSnakeHandleFunc)
+						version, handlerFunc := f()
 						methodName := v.Type().Method(i).Name
 						httpMethod := MatchMethod(methodName)
 						routeUri := MatchUrl(strings.TrimPrefix(methodName, httpMethod))
