@@ -9,7 +9,9 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/hfunc/hfunc-go/hflog"
 	"github.com/hfunc/hfunc-go/hfutils/hfgin"
+	"go.uber.org/zap"
 )
 
 type _Controller struct{}
@@ -20,6 +22,7 @@ func (_ _Controller) GroupName() string {
 
 func (_ _Controller) Middlewares() ([]gin.HandlerFunc, []gin.HandlerFunc) {
 	return []gin.HandlerFunc{
+			hfgin.TraceId("trace_id"),
 			func(c *gin.Context) {
 				fmt.Println("global prefix")
 				c.Next()
@@ -36,10 +39,12 @@ func (_ _Controller) Version() string {
 	return "v1"
 }
 
-func (_ _Controller) GETPing() (routeUri, version string, handlerFuncs []gin.HandlerFunc) {
-	return "ping", "v1", []gin.HandlerFunc{
+func (_ _Controller) GetUserById() (version string, handlerFuncs []gin.HandlerFunc) {
+	return "v1", []gin.HandlerFunc{
 		func(c *gin.Context) {
-			c.JSON(200, "pong")
+			params := c.Param("id")
+			hflog.Info(c, "GetUserById", zap.String("id", params))
+			hfgin.Ok(c, params)
 		},
 		func(c *gin.Context) {
 			fmt.Println("subfix")
@@ -48,10 +53,10 @@ func (_ _Controller) GETPing() (routeUri, version string, handlerFuncs []gin.Han
 	}
 }
 
-func (_ _Controller) GETHelloHfunc_id() ( version string, handlerFuncs []gin.HandlerFunc) {
-	return  "v1", []gin.HandlerFunc{
+func (_ _Controller) PostUserById() (version string, handlerFuncs []gin.HandlerFunc) {
+	return "v1", []gin.HandlerFunc{
 		func(c *gin.Context) {
-			c.JSON(200, "pong")
+			hfgin.Ok(c, "pong")
 		},
 		func(c *gin.Context) {
 			fmt.Println("subfix")
@@ -60,10 +65,58 @@ func (_ _Controller) GETHelloHfunc_id() ( version string, handlerFuncs []gin.Han
 	}
 }
 
-func (_ _Controller) GETHelloHfunc() ( version string, handlerFuncs []gin.HandlerFunc) {
-	return  "v1", []gin.HandlerFunc{
+func (_ _Controller) PutUserById() (version string, handlerFuncs []gin.HandlerFunc) {
+	return "v1", []gin.HandlerFunc{
 		func(c *gin.Context) {
-			c.JSON(200, "pong")
+			hfgin.Ok(c, "pong")
+		},
+		func(c *gin.Context) {
+			fmt.Println("subfix")
+			c.Next()
+		},
+	}
+}
+
+func (_ _Controller) DeleteUserById() (version string, handlerFuncs []gin.HandlerFunc) {
+	return "v1", []gin.HandlerFunc{
+		func(c *gin.Context) {
+			hfgin.Ok(c, "pong")
+		},
+		func(c *gin.Context) {
+			fmt.Println("subfix")
+			c.Next()
+		},
+	}
+}
+
+func (_ _Controller) PatchUserById() (version string, handlerFuncs []gin.HandlerFunc) {
+	return "v1", []gin.HandlerFunc{
+		func(c *gin.Context) {
+			hfgin.Ok(c, "pong")
+		},
+		func(c *gin.Context) {
+			fmt.Println("subfix")
+			c.Next()
+		},
+	}
+}
+
+func (_ _Controller) PostUserByIdName() (version string, handlerFuncs []gin.HandlerFunc) {
+	return "v1", []gin.HandlerFunc{
+		func(c *gin.Context) {
+			hfgin.Ok(c, "pong")
+		},
+		func(c *gin.Context) {
+			fmt.Println("subfix")
+			c.Next()
+		},
+	}
+}
+
+func (_ _Controller) GetUserList() (version string, handlerFuncs []gin.HandlerFunc) {
+	return "v1", []gin.HandlerFunc{
+		func(c *gin.Context) {
+			hfgin.Ok(c, "pong")
 		},
 		func(c *gin.Context) {
 			fmt.Println("subfix")
@@ -80,7 +133,11 @@ func main() {
 ```
 result:
 ```
-[GIN-debug] GET    /v1/hfunc/hello/hfunc     --> main._Controller.Middlewares.func2 (6 handlers)
-[GIN-debug] GET    /v1/hfunc/hello/hfunc/:id --> main._Controller.Middlewares.func2 (6 handlers)
-[GIN-debug] GET    /v1/hfunc/ping            --> main._Controller.Middlewares.func2 (6 handlers)
+[GIN-debug] DELETE /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] GET    /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] GET    /v1/hfunc/user/list       --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] PATCH  /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] POST   /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] POST   /v1/hfunc/user/:id/name   --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] PUT    /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
 ```
