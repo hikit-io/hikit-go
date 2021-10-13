@@ -22,7 +22,7 @@ func TestMatchUrl(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				"Hello_IdWei",
+				"HelloByIdWei",
 			},
 			want: "/hello/:id/wei",
 		},
