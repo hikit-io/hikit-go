@@ -10,6 +10,7 @@ import (
 
 type Controller interface {
 	GroupName() string
+	//Middlewares : prefix is global pre-middleware, suffix is global post middleware
 	Middlewares() (prefix, suffix []gin.HandlerFunc)
 }
 

@@ -20,7 +20,7 @@ func (_ _Controller) GroupName() string {
 	return "hfunc"
 }
 
-func (_ _Controller) Middlewares() ([]gin.HandlerFunc, []gin.HandlerFunc) {
+func (_ _Controller) Middlewares() (prefix, suffix []gin.HandlerFunc) {
 	return []gin.HandlerFunc{
 			hfgin.TraceId("trace_id"),
 			func(c *gin.Context) {
@@ -33,10 +33,6 @@ func (_ _Controller) Middlewares() ([]gin.HandlerFunc, []gin.HandlerFunc) {
 				c.Next()
 			},
 		}
-}
-
-func (_ _Controller) Version() string {
-	return "v1"
 }
 
 func (_ _Controller) GetUserById() (version string, handlerFuncs []gin.HandlerFunc) {
