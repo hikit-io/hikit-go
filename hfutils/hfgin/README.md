@@ -7,8 +7,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/hfunc/hfunc-go/hfctx"
 	"github.com/hfunc/hfunc-go/hflog"
 	"github.com/hfunc/hfunc-go/hfutils/hfgin"
 	"go.uber.org/zap"
@@ -20,16 +20,24 @@ func (_ _Controller) GroupName() string {
 	return "hfunc"
 }
 
+type logger struct {}
+
+func (l logger) Info(ctx hfctx.Ctx, msg string, keyAndValues ...interface{}) {
+	hflog.Info(ctx, msg, keyAndValues...)
+}
+
 func (_ _Controller) Middlewares() (prefix, suffix []gin.HandlerFunc) {
 	return []gin.HandlerFunc{
-			hfgin.TraceId("trace_id"),
+			hfgin.Tracer("trace_id"),
+			hfgin.Logger(logger{}),
+			hfgin.Paramer(logger{}),
 			func(c *gin.Context) {
-				fmt.Println("global prefix")
+				hflog.Info(c, "global prefix")
 				c.Next()
 			},
 		}, []gin.HandlerFunc{
 			func(c *gin.Context) {
-				fmt.Println("global subfix")
+				hflog.Info(c, "global subfix")
 				c.Next()
 			},
 		}
@@ -43,7 +51,7 @@ func (_ _Controller) GetUserById() (version string, handlerFuncs []gin.HandlerFu
 			hfgin.Ok(c, params)
 		},
 		func(c *gin.Context) {
-			fmt.Println("subfix")
+			hflog.Info(c, "subfix")
 			c.Next()
 		},
 	}
@@ -55,7 +63,7 @@ func (_ _Controller) PostUserById() (version string, handlerFuncs []gin.HandlerF
 			hfgin.Ok(c, "pong")
 		},
 		func(c *gin.Context) {
-			fmt.Println("subfix")
+			hflog.Info(c, "subfix")
 			c.Next()
 		},
 	}
@@ -67,7 +75,7 @@ func (_ _Controller) PutUserById() (version string, handlerFuncs []gin.HandlerFu
 			hfgin.Ok(c, "pong")
 		},
 		func(c *gin.Context) {
-			fmt.Println("subfix")
+			hflog.Info(c, "subfix")
 			c.Next()
 		},
 	}
@@ -79,7 +87,7 @@ func (_ _Controller) DeleteUserById() (version string, handlerFuncs []gin.Handle
 			hfgin.Ok(c, "pong")
 		},
 		func(c *gin.Context) {
-			fmt.Println("subfix")
+			hflog.Info(c, "subfix")
 			c.Next()
 		},
 	}
@@ -91,7 +99,7 @@ func (_ _Controller) PatchUserById() (version string, handlerFuncs []gin.Handler
 			hfgin.Ok(c, "pong")
 		},
 		func(c *gin.Context) {
-			fmt.Println("subfix")
+			hflog.Info(c, "subfix")
 			c.Next()
 		},
 	}
@@ -103,7 +111,7 @@ func (_ _Controller) PostUserByIdName() (version string, handlerFuncs []gin.Hand
 			hfgin.Ok(c, "pong")
 		},
 		func(c *gin.Context) {
-			fmt.Println("subfix")
+			hflog.Info(c, "subfix")
 			c.Next()
 		},
 	}
@@ -115,17 +123,19 @@ func (_ _Controller) GetUserList() (version string, handlerFuncs []gin.HandlerFu
 			hfgin.Ok(c, "pong")
 		},
 		func(c *gin.Context) {
-			fmt.Println("subfix")
+			hflog.Info(c, "subfix")
 			c.Next()
 		},
 	}
 }
 
 func main() {
-	r := gin.Default()
-	hfgin.RegisterController(r, &_Controller{})
+	r := gin.New()
+	i := r.Group("/", gin.Recovery())
+	hfgin.RegisterController(i, &_Controller{})
 	r.Run(":8081")
 }
+
 ```
 result:
 ```
