@@ -1060,3 +1060,43 @@ func TestAsUi16(t *testing.T) {
 		})
 	}
 }
+
+func TestIsI64sOrPtr(t *testing.T) {
+	type args struct {
+		elem Any
+	}
+	tests := []struct {
+		name string
+		args args
+		want B
+	}{
+		{
+			name: "",
+			args: args{
+				elem: []int{},
+			},
+			want: false,
+		},
+		{
+			name: "",
+			args: args{
+				elem: []int64{},
+			},
+			want: true,
+		},
+		{
+			name: "",
+			args: args{
+				elem: []*int64{},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsI64sOrPtr(tt.args.elem); got != tt.want {
+				t.Errorf("IsI64sOrPtr() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

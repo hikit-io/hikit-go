@@ -45,13 +45,28 @@ func IsUi(elem Any) B {
 	return ok
 }
 
+func IsUiPtr(elem Any) B {
+	_, ok := elem.(*uint)
+	return ok
+}
+
 func IsUi8(elem Any) B {
 	_, ok := elem.(uint8)
 	return ok
 }
 
+func IsUi8Ptr(elem Any) B {
+	_, ok := elem.(*Ui8)
+	return ok
+}
+
 func IsUi16(elem Any) B {
 	_, ok := elem.(uint16)
+	return ok
+}
+
+func IsUi16Ptr(elem Any) B {
+	_, ok := elem.(*uint16)
 	return ok
 }
 
@@ -65,8 +80,18 @@ func IsUi64(elem Any) B {
 	return ok
 }
 
+func IsUi64Ptr(elem Any) B {
+	_, ok := elem.(*uint64)
+	return ok
+}
+
 func IsI(elem Any) B {
 	_, ok := elem.(int)
+	return ok
+}
+
+func IsIPtr(elem Any) B {
+	_, ok := elem.(*int)
 	return ok
 }
 
@@ -75,8 +100,18 @@ func IsI8(elem Any) B {
 	return ok
 }
 
+func IsI8Ptr(elem Any) B {
+	_, ok := elem.(*int8)
+	return ok
+}
+
 func IsI16(elem Any) B {
 	_, ok := elem.(int16)
+	return ok
+}
+
+func IsI16Ptr(elem Any) B {
+	_, ok := elem.(*int16)
 	return ok
 }
 
@@ -85,13 +120,39 @@ func IsI32(elem Any) B {
 	return ok
 }
 
+func IsI32Ptr(elem Any) B {
+	_, ok := elem.(*int32)
+	return ok
+}
+
 func IsI64(elem Any) B {
 	_, ok := elem.(int64)
 	return ok
 }
 
+func IsI64Ptr(elem Any) B {
+	_, ok := elem.(*int64)
+	return ok
+}
+
 func IsInt(elem Any) B {
 	switch elem.(type) {
+	case I, I8, I16, I32, I64:
+		return true
+	}
+	return false
+}
+
+func IsIntPtr(e Any) B {
+	switch e.(type) {
+	case I, I8, I16, I32, I64:
+		return true
+	}
+	return false
+}
+
+func IsIntOrPtr(e Any) B {
+	switch e.(type) {
 	case I, I8, I16, I32, I64, *I, *I8, *I16, *I32, *I64:
 		return true
 	}
@@ -100,6 +161,22 @@ func IsInt(elem Any) B {
 
 func IsUint(elem Any) B {
 	switch elem.(type) {
+	case Ui, Ui8, Ui16, Ui32, Ui64:
+		return true
+	}
+	return false
+}
+
+func IsUintPtr(elem Any) B {
+	switch elem.(type) {
+	case *Ui, *Ui8, *Ui16, *Ui32, *Ui64:
+		return true
+	}
+	return false
+}
+
+func IsUintOrPtr(e Any) B {
+	switch e.(type) {
 	case Ui, Ui8, Ui16, Ui32, Ui64, *Ui, *Ui8, *Ui16, *Ui32, *Ui64:
 		return true
 	}
@@ -111,9 +188,33 @@ func IsIs(elem Any) B {
 	return ok
 }
 
+func IsIsPtr(elem Any) B {
+	_, ok := elem.([]*int)
+	return ok
+}
+
+func IsIsOrPtr(elem Any) B {
+	if IsIs(elem) {
+		return true
+	}
+	return IsIsPtr(elem)
+}
+
 func IsI8s(elem Any) B {
 	_, ok := elem.([]I8)
 	return ok
+}
+
+func IsI8sPtr(elem Any) B {
+	_, ok := elem.([]*I8)
+	return ok
+}
+
+func IsI8sOrPtr(elem Any) B {
+	if IsI8s(elem) {
+		return true
+	}
+	return IsI8sPtr(elem)
 }
 
 func IsI16s(elem Any) B {
@@ -121,9 +222,33 @@ func IsI16s(elem Any) B {
 	return ok
 }
 
+func IsI16sPtr(elem Any) B {
+	_, ok := elem.([]*I16)
+	return ok
+}
+
+func IsI16sOrPtr(elem Any) B {
+	if IsI16s(elem) {
+		return true
+	}
+	return IsI16sPtr(elem)
+}
+
 func IsI32s(elem Any) B {
 	_, ok := elem.([]I32)
 	return ok
+}
+
+func IsI32sPtr(elem Any) B {
+	_, ok := elem.([]*I32)
+	return ok
+}
+
+func IsI32sOrPtr(elem Any) B {
+	if IsI32s(elem) {
+		return true
+	}
+	return IsI32sPtr(elem)
 }
 
 func IsI64s(elem Any) B {
@@ -131,9 +256,33 @@ func IsI64s(elem Any) B {
 	return ok
 }
 
+func IsI64sPtr(elem Any) B {
+	_, ok := elem.([]*I64)
+	return ok
+}
+
+func IsI64sOrPtr(elem Any) B {
+	if IsI64s(elem) {
+		return true
+	}
+	return IsI64sPtr(elem)
+}
+
 func IsUis(elem Any) B {
 	_, ok := elem.([]Ui)
 	return ok
+}
+
+func IsUisPtr(elem Any) B {
+	_, ok := elem.([]*Ui)
+	return ok
+}
+
+func IsUisOrPtr(elem Any) B {
+	if IsUis(elem) {
+		return true
+	}
+	return IsUisPtr(elem)
 }
 
 func IsUi8s(elem Any) B {
@@ -141,9 +290,33 @@ func IsUi8s(elem Any) B {
 	return ok
 }
 
-func IsUi6s(elem Any) B {
+func IsUi8sPtr(elem Any) B {
+	_, ok := elem.([]*Ui8)
+	return ok
+}
+
+func IsUi8sOrPtr(elem Any) B {
+	if IsUi8s(elem) {
+		return true
+	}
+	return IsUi8sPtr(elem)
+}
+
+func IsUi16s(elem Any) B {
 	_, ok := elem.([]Ui16)
 	return ok
+}
+
+func IsUi16sPtr(elem Any) B {
+	_, ok := elem.([]*Ui16)
+	return ok
+}
+
+func IsUi16sOrPtr(elem Any) B {
+	if IsUis(elem) {
+		return true
+	}
+	return IsUisPtr(elem)
 }
 
 func IsUi32s(elem Any) B {
@@ -151,9 +324,33 @@ func IsUi32s(elem Any) B {
 	return ok
 }
 
+func IsUi32sPtr(elem Any) B {
+	_, ok := elem.([]*Ui)
+	return ok
+}
+
+func IsUi32sOrPtr(elem Any) B {
+	if IsUi32s(elem) {
+		return true
+	}
+	return IsUi32sPtr(elem)
+}
+
 func IsUi64s(elem Any) B {
 	_, ok := elem.([]Ui64)
 	return ok
+}
+
+func IsUi64sPtr(elem Any) B {
+	_, ok := elem.([]*Ui64)
+	return ok
+}
+
+func IsUi64sOrPtr(elem Any) B {
+	if IsUis(elem) {
+		return true
+	}
+	return IsUisPtr(elem)
 }
 
 func IsF32s(elem Any) B {
@@ -161,9 +358,33 @@ func IsF32s(elem Any) B {
 	return ok
 }
 
+func IsF32sPtr(elem Any) B {
+	_, ok := elem.([]*F32)
+	return ok
+}
+
+func IsF32sOrPtr(elem Any) B {
+	if IsF32(elem) {
+		return true
+	}
+	return IsF32sPtr(elem)
+}
+
 func IsF64s(elem Any) B {
 	_, ok := elem.([]F64)
 	return ok
+}
+
+func IsF64sPtr(elem Any) B {
+	_, ok := elem.([]*F32)
+	return ok
+}
+
+func IsF64sOrPtr(elem Any) B {
+	if IsF64s(elem) {
+		return true
+	}
+	return IsF64sPtr(elem)
 }
 
 func RangeI8(i64 I64) bool {

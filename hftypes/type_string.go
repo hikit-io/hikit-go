@@ -5,22 +5,38 @@ import (
 	"strconv"
 )
 
-func IsString(elem Any) B {
-	switch elem.(type) {
-	case string, *string:
-		return true
-	}
-	return false
-}
-
 func IsStr(elem Any) B {
 	_, ok := elem.(string)
 	return ok
 }
 
-func IsStrp(elem Any) B {
+func IsStrPtr(elem Any) B {
 	_, ok := elem.(*string)
 	return ok
+}
+
+func IsStrOrPtr(elem Any) B {
+	if IsStr(elem) {
+		return true
+	}
+	return IsStrPtr(elem)
+}
+
+func IsStrs(elem Any) B {
+	_, ok := elem.([]string)
+	return ok
+}
+
+func IsStrsPtr(elem Any) B {
+	_, ok := elem.([]*string)
+	return ok
+}
+
+func IsStrsOrPtr(elem Any) B {
+	if IsStrs(elem) {
+		return true
+	}
+	return IsStrsPtr(elem)
 }
 
 func ToStr(e Any) string {

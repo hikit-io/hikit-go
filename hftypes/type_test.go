@@ -395,3 +395,64 @@ func TestAsBool(t *testing.T) {
 //		})
 //	}
 //}
+
+func TestIsStructOrPtr(t *testing.T) {
+	type args struct {
+		e Any
+	}
+	type H struct {
+		S string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "",
+			args: args{
+				e: "1",
+			},
+			want: false,
+		},
+		{
+			name: "",
+			args: args{
+				e: &map[string]string{},
+			},
+			want: false,
+		},
+		{
+			name: "",
+			args: args{
+				e: struct {
+					U string
+				}{},
+			},
+			want: true,
+		},
+		{
+			name: "",
+			args: args{
+				e: &struct {
+					U string
+				}{},
+			},
+			want: true,
+		},
+		{
+			name: "",
+			args: args{
+				e: H{},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsStructOrPtr(tt.args.e); got != tt.want {
+				t.Errorf("IsStructOrPtr() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

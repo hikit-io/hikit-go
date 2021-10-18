@@ -1,7 +1,6 @@
 package hftypes
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 )
@@ -43,7 +42,80 @@ type (
 	Ui32 = uint32
 	Ui64 = uint64
 	Ui   = uint
+
+	MustPtr = Any
+
+	MustStruct      = Any
+	MustStructPtr   = Any
+	MustStructOrPtr = Any
+
+	MustSlice      = Any
+	MustSlicePtr   = Any
+	MustSliceOrPtr = Any
+
+	MustSliceInt      = Any
+	MustSliceIntPtr   = Any
+	MustSliceIntOrPtr = Any
+
+	MustSliceFloat      = Any
+	MustSliceFloatPtr   = Any
+	MustSliceFloatOrPtr = Any
+
+	MustSliceStr      = Any
+	MustSliceStrPtr   = Any
+	MustSliceStrOrPtr = Any
+
+	MustSliceStruct      = Any
+	MustSliceStructPtr   = Any
+	MustSliceStructOrPtr = Any
+
+	MustInt      = Any
+	MustIntPtr   = Any
+	MustIntOrPtr = Any
+
+	MustFloat      = Any
+	MustFloatPtr   = Any
+	MustFloatOrPtr = Any
+
+	MustStr      = Any
+	MustStrPtr   = Any
+	MustStrOrPtr = Any
+
+	MustMap      = Any
+	MustMapPtr   = Any
+	MustMapOrPtr = Any
 )
+
+func IsStructOrPtr(e Any) B {
+	v := reflect.TypeOf(e)
+	if v.Kind() == reflect.Struct {
+		return true
+	}
+	if v.Kind() == reflect.Ptr {
+		if v.Elem().Kind() == reflect.Struct {
+			return true
+		}
+	}
+	return false
+}
+
+func IsStruct(e Any) B {
+	v := reflect.TypeOf(e)
+	if v.Kind() == reflect.Struct {
+		return true
+	}
+	return false
+}
+
+func IsStructPtr(e Any) B {
+	v := reflect.TypeOf(e)
+	if v.Kind() == reflect.Ptr {
+		if v.Elem().Kind() == reflect.Struct {
+			return true
+		}
+	}
+	return false
+}
 
 type TypeFc func(elem Any) bool
 
@@ -60,32 +132,55 @@ func IsInterface(elem Any) B {
 	return false
 }
 
+func IsSliceOrPtr(e Any) B {
+	if IsSlice(e) {
+		return true
+	}
+	return IsSlicePtr(e)
+}
+
 func IsSlice(elem Any) B {
 	// 已知类型断言
 	switch elem.(type) {
-	case []Any, *[]Any, []I, *[]I, []Str, *[]Str:
+	case []Any:
+		return true
+	case []Str:
+		return true
+	case []F32, []F64:
+		return true
+	case []Ui, []Ui8, []Ui16, []Ui32, []Ui64:
+		return true
+	case []I, []I8, []I16, []I32, []I64:
+		return true
+	}
+
+	tv := reflect.ValueOf(elem)
+	return tv.Kind() == reflect.Slice
+}
+
+func IsSlicePtr(elem Any) B {
+	// 已知类型断言
+	switch elem.(type) {
+	case []Any:
+		return true
+	case []*Str:
+		return true
+	case []*F32, []*F64:
+		return true
+	case []*Ui, []*Ui8, []*Ui16, []*Ui32, []*Ui64:
+		return true
+	case []*I, []*I8, []*I16, []*I32, []*I64:
 		return true
 	}
 
 	tv := reflect.ValueOf(elem)
 	if tv.Kind() == reflect.Ptr {
-		fmt.Println(tv.Elem().Kind())
 		return tv.Elem().Kind() == reflect.Slice
 	}
-	return tv.Kind() == reflect.Slice
+	return false
 }
 
 func IsAnys(elem Any) B {
-	_, ok := elem.([]interface{})
-	return ok
-}
-
-func Complex64(elem Any) B {
-	_, ok := elem.(complex64)
-	return ok
-}
-
-func Complex128(elem Any) B {
-	_, ok := elem.(complex128)
+	_, ok := elem.([]Any)
 	return ok
 }

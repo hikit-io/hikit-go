@@ -30,6 +30,11 @@ func IsB(elem Any) B {
 	return false
 }
 
+func IsBPtr(elem Any) B {
+	_, ok := elem.(*B)
+	return ok
+}
+
 func ToBool(e Any) B {
 	switch {
 	case IsInt(e):
