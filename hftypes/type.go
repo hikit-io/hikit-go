@@ -81,10 +81,57 @@ type (
 	MustStrPtr   = Any
 	MustStrOrPtr = Any
 
-	MustMap      = Any
-	MustMapPtr   = Any
-	MustMapOrPtr = Any
+	MustMap       = Any
+	MustMapPtr    = Any
+	MustMapOrPtr  = Any
+	MustMapStrAny = Any
 )
+
+func IsMap(e Any) B {
+	t := reflect.TypeOf(e)
+	if t.Kind() == reflect.Map {
+		return true
+	}
+	return false
+}
+
+func IsMapPtr(e Any) B {
+	t := reflect.TypeOf(e)
+	if t.Kind() == reflect.Ptr {
+		if t.Elem().Kind() == reflect.Map {
+			return true
+		}
+	}
+	return false
+}
+
+func IsMapOrPtr(e Any) B {
+	t := reflect.TypeOf(e)
+	if t.Kind() == reflect.Map {
+		return true
+	}
+	if t.Kind() == reflect.Ptr {
+		if t.Elem().Kind() == reflect.Map {
+			return true
+		}
+	}
+	return false
+}
+
+func IsMapStrAny(m Any) B {
+	_, ok := m.(map[string]Any)
+	return ok
+}
+
+func IsMapStrAnyPtr(m Any) B {
+	_, ok := m.(*map[string]Any)
+	return ok
+}
+
+func IsMapStrAnyOrPtr(m Any) B {
+	_, ok := m.(*map[string]Any)
+	return ok
+}
 
 func IsStructOrPtr(e Any) B {
 	v := reflect.TypeOf(e)

@@ -1,6 +1,10 @@
 package hftypes
 
-import "reflect"
+import (
+	"errors"
+	"fmt"
+	"reflect"
+)
 
 type (
 	MapStrI   = map[Str]I
@@ -19,35 +23,68 @@ type (
 	MapStrF64 = map[Str]F64
 
 	MapStrStr = map[Str]Str
+	MapStrAny = map[Str]Any
 )
 
-func IsMap(e Any) B {
-	t := reflect.TypeOf(e)
-	if t.Kind() == reflect.Map {
-		return true
+func MapStrAnyToStruct(m MustMapStrAny, s MustStructPtr) error {
+	var (
+		mv reflect.Value
+	)
+	switch {
+	case IsMapStrAny(m):
+		mv = reflect.ValueOf(m)
+	case IsMapStrAnyPtr(m):
+		mv = reflect.ValueOf(m).Elem()
 	}
-	return false
-}
-
-func IsMapPtr(e Any) B {
-	t := reflect.TypeOf(e)
-	if t.Kind() == reflect.Ptr {
-		if t.Elem().Kind() == reflect.Map {
-			return true
+	if !IsStructPtr(s) {
+		return errors.New("s must be struct ptr")
+	}
+	sv := reflect.ValueOf(s)
+	mi := mv.MapRange()
+	for mi.Next() {
+		field := sv.Elem().FieldByName(mi.Key().String())
+		if field.Kind() == mi.Value().Kind() {
+			field.Set(mi.Value())
+		} else {
+			if field.Kind() == mi.Value().Elem().Kind() {
+				field.Set(mi.Value().Elem())
+				continue
+			}
+			if mi.Value().Elem().Kind() == reflect.Map {
+				err := mapToStruct(mi.Value().Elem(), field)
+				if err != nil {
+					return err
+				}
+				continue
+			}
+			return errors.New(fmt.Sprintf("map [%v] kind is %v,struct key kind is %v", mi.Key().String(), mi.Value().Kind(), field.Kind()))
 		}
 	}
-	return false
+	return nil
 }
 
-func IsMapOrPtr(e Any) B {
-	t := reflect.TypeOf(e)
-	if t.Kind() == reflect.Map {
-		return true
-	}
-	if t.Kind() == reflect.Ptr {
-		if t.Elem().Kind() == reflect.Map {
-			return true
+func mapToStruct(m reflect.Value, s reflect.Value) error {
+	mv := m
+	sv := s
+	mi := mv.MapRange()
+	for mi.Next() {
+		field := sv.FieldByName(mi.Key().String())
+		if field.Kind() == mi.Value().Kind() {
+			field.Set(mi.Value())
+		} else {
+			if field.Kind() == mi.Value().Elem().Kind() {
+				field.Set(mi.Value().Elem())
+				continue
+			}
+			if mi.Value().Kind() == reflect.Map {
+				err := mapToStruct(mi.Value().Elem(), field)
+				if err != nil {
+					return err
+				}
+				continue
+			}
+			return errors.New(fmt.Sprintf("map [%v] kind is %v,struct key kind is %v", mi.Key().String(), mi.Value().Kind(), field.Kind()))
 		}
 	}
-	return false
+	return nil
 }
