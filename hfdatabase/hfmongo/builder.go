@@ -7,23 +7,31 @@ import (
 
 type Builder struct {
 	fields        map[string]*Filed
-	FindOptions   *options.FindOptions
-	UpdateOptions *options.UpdateOptions
+	findOptions   *options.FindOptions
+	updateOptions *options.UpdateOptions
 }
 
 func (o *Builder) Reset() {
 	o.init()
 }
 
+func (o *Builder) Skip(count int64) {
+	o.findOptions.Skip = &count
+}
+
+func (o *Builder) Limit(count int64) {
+	o.findOptions.Limit = &count
+}
+
 func (o *Builder) init() {
 	if o.fields == nil {
 		o.fields = map[string]*Filed{}
 	}
-	if o.FindOptions == nil {
-		o.FindOptions = options.Find()
+	if o.findOptions == nil {
+		o.findOptions = options.Find()
 	}
-	if o.UpdateOptions == nil {
-		o.UpdateOptions = options.Update()
+	if o.updateOptions == nil {
+		o.updateOptions = options.Update()
 	}
 }
 
@@ -85,4 +93,48 @@ func (o *Builder) Update() bson.D {
 		}
 	}
 	return all
+}
+
+func (o *Builder) Options() *options.FindOptions {
+	o.init()
+	var (
+		sort bson.D
+		pros bson.D
+		hint bson.D
+	)
+
+	for _, filed := range o.fields {
+		for _, e := range filed.val {
+			if e.opType == OpTypeQuery {
+				switch e.Key {
+				case QueryOp.Sort:
+					sort = append(sort, bson.E{
+						Key:   filed.name,
+						Value: e.Value,
+					})
+				case QueryOp.Projection:
+					pros = append(pros, bson.E{
+						Key:   filed.name,
+						Value: e.Value,
+					})
+				case QueryOp.Hint:
+					pros = append(pros, bson.E{
+						Key:   filed.name,
+						Value: e.Value,
+					})
+				}
+			}
+		}
+
+	}
+	if len(sort) != 0 {
+		o.findOptions.Sort = sort
+	}
+	if len(pros) != 0 {
+		o.findOptions.Projection = pros
+	}
+	if len(hint) != 0 {
+		o.findOptions.Hint = hint
+	}
+	return o.findOptions
 }

@@ -13,6 +13,7 @@ type OpType uint8
 const (
 	OpTypeFind OpType = iota + 1
 	OpTypeUpdate
+	OpTypeQuery
 )
 
 type E struct {
