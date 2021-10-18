@@ -21,7 +21,7 @@ var ctx = context.Background()
 func init() {
 	ctx := context.Background()
 	o := options.Client()
-	o.ApplyURI("mongodb://root:Nieaowei360!@dds-bp1db6408e87bb241195-pub.mongodb.rds.aliyuncs.com:3717,dds-bp1db6408e87bb242818-pub.mongodb.rds.aliyuncs.com:3717/admin?authSource=admin&replicaSet=mgset-56220715&readPreference=primary&appname=MongoDB%20Compass&ssl=false")
+	o.ApplyURI(url)
 	cli, _ := mongo.NewClient(o)
 	cli.Connect(ctx)
 	db := cli.Database("test")
