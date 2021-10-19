@@ -5,35 +5,64 @@ import (
 	"reflect"
 )
 
-func StructToMapStrStr() {
+func StructToMapStrStr(split Str, s MustStruct, m MustMapStrAny) {
 
 }
 
-func StructToMapStrAny(s MustStruct, m MustMapStrAny) error {
+func StructToMapStrAny(s MustStruct, m MustMapStrAnyOrPtr) error {
 	var (
 		mi map[Str]Any
+		sv reflect.Value
 	)
-	if IsMapStrAny(m) {
+	switch {
+	case IsMapStrAny(m):
 		mi = m.(MapStrAny)
-	}
-	if IsMapStrAnyPtr(m) {
+	case IsMapStrAnyPtr(m):
 		mi = *(m.(*MapStrAny))
+	default:
+		return errors.New("s must be map[Str]Any or *map[Str]Any ")
 	}
-	if !IsStruct(s) {
-		return errors.New("")
+
+	switch {
+	case IsStruct(s):
+		sv = reflect.ValueOf(s)
+	case IsStructPtr(s):
+		sv = reflect.ValueOf(s).Elem()
+	default:
+		return errors.New("s must be struct or *struct")
 	}
-	sv := reflect.ValueOf(s)
+
 	for i := 0; i < sv.NumField(); i++ {
-		if sv.Field(i).Kind() == reflect.Struct {
+		field := sv.Field(i)
+		if field.Kind() == reflect.Struct {
 			im := map[Str]Any{}
-			err := StructToMapStrAny(sv.Field(i).Interface(), im)
+			err := StructToMapStrAny(field.Interface(), im)
 			if err != nil {
 				return err
 			}
 			mi[sv.Type().Field(i).Name] = im
 			continue
 		}
-		mi[sv.Type().Field(i).Name] = sv.Field(i).Interface()
+		if field.Kind() == reflect.Ptr {
+			if field.Elem().Kind() == reflect.Struct {
+				im := map[Str]Any{}
+				err := StructToMapStrAny(field.Elem().Interface(), im)
+				if err != nil {
+					return err
+				}
+				mi[sv.Type().Field(i).Name] = im
+				continue
+			}
+			if !field.IsZero() {
+				mi[sv.Type().Field(i).Name] = field.Elem().Interface()
+				continue
+			}
+			if !field.IsNil() {
+				mi[sv.Type().Field(i).Name] = field.Elem().Interface()
+				continue
+			}
+		}
+		mi[sv.Type().Field(i).Name] = field.Interface()
 	}
 	return nil
 }

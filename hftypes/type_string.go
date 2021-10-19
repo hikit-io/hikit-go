@@ -58,3 +58,7 @@ func ToStr(e Any) string {
 func AsStr(e Any) string {
 	return e.(string)
 }
+
+func StrPtr(s Str) *Str {
+	return &s
+}

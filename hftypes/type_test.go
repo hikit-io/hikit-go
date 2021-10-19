@@ -34,14 +34,14 @@ func TestIsArray(t *testing.T) {
 			args: args{
 				elem: &([]string{"dsa"}),
 			},
-			want: true,
+			want: false,
 		},
 		{
 			name: "array struct",
 			args: args{
 				elem: &([]struct{ Name string }{{"dsa"}}),
 			},
-			want: true,
+			want: false,
 		},
 	}
 	for _, tt := range tests {
@@ -452,6 +452,54 @@ func TestIsStructOrPtr(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsStructOrPtr(tt.args.e); got != tt.want {
 				t.Errorf("IsStructOrPtr() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsMapStrAnyOrPtr(t *testing.T) {
+	type args struct {
+		m Any
+	}
+	var m MapStrAny
+	tests := []struct {
+		name string
+		args args
+		want B
+	}{
+		{
+			name: "",
+			args: args{
+				m: "",
+			},
+			want: false,
+		},
+		{
+			name: "",
+			args: args{
+				m: MapStrAny{},
+			},
+			want: true,
+		},
+		{
+			name: "",
+			args: args{
+				m: nil,
+			},
+			want: false,
+		},
+		{
+			name: "",
+			args: args{
+				m: m,
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsMapStrAnyOrPtr(tt.args.m); got != tt.want {
+				t.Errorf("IsMapStrAnyOrPtr() = %v, want %v", got, tt.want)
 			}
 		})
 	}

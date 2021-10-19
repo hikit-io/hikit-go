@@ -81,10 +81,12 @@ type (
 	MustStrPtr   = Any
 	MustStrOrPtr = Any
 
-	MustMap       = Any
-	MustMapPtr    = Any
-	MustMapOrPtr  = Any
-	MustMapStrAny = Any
+	MustMap            = Any
+	MustMapPtr         = Any
+	MustMapOrPtr       = Any
+	MustMapStrAny      = Any
+	MustMapStrAnyPtr   = Any
+	MustMapStrAnyOrPtr = Any
 )
 
 func IsMap(e Any) B {
@@ -119,18 +121,26 @@ func IsMapOrPtr(e Any) B {
 }
 
 func IsMapStrAny(m Any) B {
+	if m == nil {
+		return false
+	}
 	_, ok := m.(map[string]Any)
 	return ok
 }
 
 func IsMapStrAnyPtr(m Any) B {
+	if m == nil {
+		return false
+	}
 	_, ok := m.(*map[string]Any)
 	return ok
 }
 
 func IsMapStrAnyOrPtr(m Any) B {
-	_, ok := m.(*map[string]Any)
-	return ok
+	if IsMapStrAny(m) {
+		return true
+	}
+	return IsMapStrAnyPtr(m)
 }
 
 func IsStructOrPtr(e Any) B {
@@ -147,6 +157,9 @@ func IsStructOrPtr(e Any) B {
 }
 
 func IsStruct(e Any) B {
+	if e == nil {
+		return false
+	}
 	v := reflect.TypeOf(e)
 	if v.Kind() == reflect.Struct {
 		return true
@@ -155,6 +168,9 @@ func IsStruct(e Any) B {
 }
 
 func IsStructPtr(e Any) B {
+	if e == nil {
+		return false
+	}
 	v := reflect.TypeOf(e)
 	if v.Kind() == reflect.Ptr {
 		if v.Elem().Kind() == reflect.Struct {
