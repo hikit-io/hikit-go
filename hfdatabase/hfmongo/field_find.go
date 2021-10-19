@@ -2,6 +2,9 @@ package hfmongo
 
 import (
 	. "github.com/hfunc/hfunc-go/hftypes"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 func (f *Filed) LessThan(val Any) *Filed {
@@ -72,6 +75,35 @@ func (f *Filed) Equal(val Any) *Filed {
 
 func (f *Filed) Hint(val int) *Filed {
 	return f.op(QueryOp.Hint, OpTypeQuery, val)
+}
+
+func (f *Filed) Expression(expr string) *Filed {
+	expr = strings.ReplaceAll(expr, " ", "")
+	e, _ := regexp.Compile(`^[0-9]+((<)|(<=)|(>)|(>=))\$((<)|(<=)|(>)|(>=))[0-9]+$`)
+	spilt, _ := regexp.Compile(`(<=)|(>=)|(<)|(>)`)
+	if !e.MatchString(expr) {
+		return f
+	}
+	ops := spilt.FindAllString(expr, -1)
+	numbers := spilt.Split(expr, -1)
+	if (ops[0] == "<" || ops[0] == "<=") && (ops[1] == "<" || ops[1] == "<=") {
+		pre, _ := strconv.Atoi(numbers[0])
+		sub, _ := strconv.Atoi(numbers[2])
+		if pre <= sub {
+			f.GreatThan(pre)
+			f.LessThan(sub)
+		}
+	}
+
+	if (ops[0] == ">" || ops[0] == ">=") && (ops[1] == ">" || ops[1] == ">=") {
+		pre, _ := strconv.Atoi(numbers[0])
+		sub, _ := strconv.Atoi(numbers[2])
+		if pre >= sub {
+			f.GreatThan(sub)
+			f.LessThan(pre)
+		}
+	}
+	return f
 }
 
 type SortType int
