@@ -1,9 +1,3 @@
-# hfgin
-
-## Feature
-
-## Example 
-```go
 // @title Atlas API
 // @version 1.0
 
@@ -319,15 +313,3 @@ func main() {
 	hfgin.RegisterController(i, &_Controller{})
 	r.Run(":8081")
 }
-```
-result:
-```
-[GIN-debug] DELETE /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
-[GIN-debug] GET    /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
-[GIN-debug] GET    /v1/hfunc/user/list       --> main._Controller.Middlewares.func2 (7 handlers)
-[GIN-debug] PATCH  /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
-[GIN-debug] POST   /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
-[GIN-debug] POST   /v1/hfunc/user/:id/name   --> main._Controller.Middlewares.func2 (7 handlers)
-[GIN-debug] PUT    /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
-```
-swagger doc: http://127.0.0.1:8080/swagger/index.html
