@@ -6,7 +6,7 @@ import (
 )
 
 type Doc interface {
-	Name() string
+	DocName() string
 }
 
 func (o updateOp) GenPlaceAll(prefix, suffix string) string {

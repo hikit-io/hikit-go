@@ -38,7 +38,7 @@ func (c *Database) Col(model Any) *Collection {
 	case string:
 		nameStr = n
 	case Doc:
-		nameStr = n.Name()
+		nameStr = n.DocName()
 	default:
 		rv := reflect.ValueOf(model)
 		if rv.Kind() == reflect.Ptr {
@@ -50,8 +50,6 @@ func (c *Database) Col(model Any) *Collection {
 	}
 	if c.options.tableNameFc != nil {
 		nameStr = c.options.tableNameFc(nameStr)
-	} else {
-		nameStr = ""
 	}
 	col, ok := c.tables[nameStr]
 	if !ok {
@@ -64,28 +62,81 @@ func (c *Database) Col(model Any) *Collection {
 	return col
 }
 
-func (c *Collection) FindAny(ctx context.Context, val MustStructPtr, res MustSlicePtr) error {
+func (c *Collection) FindAny(ctx context.Context, val MustPtr, res MustSlicePtr) error {
 	builder := Builder{}
 	switch inst := val.(type) {
 	case map[string]interface{}:
 		for field, value := range inst {
 			builder.Field(field).Equal(value)
 		}
-	}
+	case map[string]string:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]int:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]int8:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]int16:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]int32:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]int64:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]uint:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]uint8:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]uint16:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]uint32:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]uint64:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
 
-	rft := reflect.TypeOf(val).Elem()
-	rfv := reflect.ValueOf(val).Elem()
-	switch rft.Kind() {
-	case reflect.Struct:
-		for i := 0; i < rft.NumField(); i++ {
-			v, ok := rft.Field(i).Tag.Lookup("json")
-			if ok {
-				builder.Field(v).Equal(rfv.FieldByName(rft.Field(i).Name).Interface())
-				continue
+	default:
+		rft := reflect.TypeOf(val).Elem()
+		rfv := reflect.ValueOf(val).Elem()
+		if rft.Kind() == reflect.Struct {
+			for i := 0; i < rft.NumField(); i++ {
+				if rfv.Field(i).Kind() == reflect.Ptr {
+					if rfv.FieldByName(rft.Field(i).Name).IsZero() || rfv.FieldByName(rft.Field(i).Name).IsNil() {
+						continue
+					}
+				}
+
+				v, ok := rft.Field(i).Tag.Lookup("bson")
+				if ok {
+					builder.Field(v).Equal(rfv.FieldByName(rft.Field(i).Name).Interface())
+					continue
+				}
+
+				builder.Field(rft.Field(i).Name).Equal(rfv.FieldByName(rft.Field(i).Name).Interface())
+
 			}
-			builder.Field(rft.Field(i).Name).Equal(rfv.FieldByName(rft.Field(i).Name).Interface())
 		}
 	}
+
 	options.Find()
 	cur, err := c.Collection.Find(ctx, builder.Filter())
 	if err != nil {
@@ -98,9 +149,9 @@ func (c *Collection) UpdateAny() {
 
 }
 
-func New(client *mongo.Client, daname string) *Database {
+func NewDB(client *mongo.Client, dbname string) *Database {
 	return &Database{
-		dbname: daname,
+		dbname: dbname,
 		Client: client,
 		tables: map[TableName]*Collection{},
 	}

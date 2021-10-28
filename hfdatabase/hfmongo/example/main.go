@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/hfunc/hfunc-go/hfdatabase/hfmongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,14 +19,27 @@ type User struct {
 var col *mongo.Collection
 var ctx = context.Background()
 
+var db *hfmongo.Database
+
 func init() {
 	ctx := context.Background()
 	o := options.Client()
 	o.ApplyURI(url)
 	cli, _ := mongo.NewClient(o)
 	cli.Connect(ctx)
-	db := cli.Database("test")
-	col = db.Collection("test")
+	db = hfmongo.NewDB(cli, "test")
+	//col = db.Collection("test")
+
+}
+
+type Test struct {
+	Name string `json:"name" bson:"name"`
+	Age  int64  `json:"age" bson:"age"`
+	Addr string `json:"addr" bson:"addr"`
+}
+
+func (t Test) DocName() string {
+	return "test"
 }
 
 func main() {
@@ -36,14 +50,23 @@ func main() {
 	builder.Field("addr").Projection(false)
 	builder.Limit(2)
 	builder.Skip(1)
-	op := builder.Options()
-	cur, err := col.Find(ctx, builder.Filter(), op)
+	//op := builder.Options()
+	t := &Test{
+		Name: "nieaowei",
+	}
+	ts := []Test{}
+	err := db.Col(t).FindAny(context.Background(), t, &ts)
 	if err != nil {
 		panic(err)
 	}
-	users := []User{}
-	err = cur.All(ctx, &users)
-	if err != nil {
-		panic(err)
-	}
+	fmt.Println(ts)
+	//cur, err := col.Find(ctx, builder.Filter(), op)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//users := []User{}
+	//err = cur.All(ctx, &users)
+	//if err != nil {
+	//	panic(err)
+	//}
 }
