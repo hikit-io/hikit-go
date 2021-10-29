@@ -12,14 +12,18 @@ type Builder struct {
 }
 
 func (o *Builder) Reset() {
-	o.init()
+	o.fields = map[string]*Filed{}
+	o.findOptions = &options.FindOptions{}
+	o.updateOptions = &options.UpdateOptions{}
 }
 
 func (o *Builder) Skip(count int64) {
+	o.init()
 	o.findOptions.Skip = &count
 }
 
 func (o *Builder) Limit(count int64) {
+	o.init()
 	o.findOptions.Limit = &count
 }
 
