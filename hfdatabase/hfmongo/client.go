@@ -4,7 +4,6 @@ import (
 	"context"
 	. "github.com/hfunc/hfunc-go/hftypes"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
 )
 
@@ -63,7 +62,7 @@ func (c *Database) Col(model Any) *Collection {
 }
 
 func (c *Collection) FindAny(ctx context.Context, val MustPtr, res MustSlicePtr) error {
-	builder := Builder{}
+	builder := &Builder{}
 	switch inst := val.(type) {
 	case map[string]interface{}:
 		for field, value := range inst {
@@ -113,7 +112,10 @@ func (c *Collection) FindAny(ctx context.Context, val MustPtr, res MustSlicePtr)
 		for field, value := range inst {
 			builder.Field(field).Equal(value)
 		}
-
+	case *Builder:
+		builder = inst
+	case Builder:
+		builder = &inst
 	default:
 		rft := reflect.TypeOf(val).Elem()
 		rfv := reflect.ValueOf(val).Elem()
@@ -124,7 +126,6 @@ func (c *Collection) FindAny(ctx context.Context, val MustPtr, res MustSlicePtr)
 						continue
 					}
 				}
-
 				v, ok := rft.Field(i).Tag.Lookup("bson")
 				if ok {
 					builder.Field(v).Equal(rfv.FieldByName(rft.Field(i).Name).Interface())
@@ -132,21 +133,96 @@ func (c *Collection) FindAny(ctx context.Context, val MustPtr, res MustSlicePtr)
 				}
 
 				builder.Field(rft.Field(i).Name).Equal(rfv.FieldByName(rft.Field(i).Name).Interface())
-
 			}
 		}
 	}
-
-	options.Find()
-	cur, err := c.Collection.Find(ctx, builder.Filter())
+	cur, err := c.Collection.Find(ctx, builder.Filter(), builder.FindOpts())
 	if err != nil {
 		return err
 	}
 	return cur.All(ctx, res)
 }
 
-func (c *Collection) UpdateAny() {
+func (c *Collection) UpdateAny(ctx context.Context, val MustPtr, res MustSlicePtr) error {
+	builder := &Builder{}
+	switch inst := val.(type) {
+	case map[string]interface{}:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]string:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]int:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]int8:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]int16:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]int32:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]int64:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]uint:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]uint8:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]uint16:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]uint32:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case map[string]uint64:
+		for field, value := range inst {
+			builder.Field(field).Equal(value)
+		}
+	case *Builder:
+		builder = inst
+	case Builder:
+		builder = &inst
+	default:
+		rft := reflect.TypeOf(val).Elem()
+		rfv := reflect.ValueOf(val).Elem()
+		if rft.Kind() == reflect.Struct {
+			for i := 0; i < rft.NumField(); i++ {
+				if rfv.Field(i).Kind() == reflect.Ptr {
+					if rfv.FieldByName(rft.Field(i).Name).IsZero() || rfv.FieldByName(rft.Field(i).Name).IsNil() {
+						continue
+					}
+				}
+				v, ok := rft.Field(i).Tag.Lookup("bson")
+				if ok {
+					builder.Field(v).Equal(rfv.FieldByName(rft.Field(i).Name).Interface())
+					continue
+				}
 
+				builder.Field(rft.Field(i).Name).Equal(rfv.FieldByName(rft.Field(i).Name).Interface())
+			}
+		}
+	}
+	cur, err := c.Collection.Find(ctx, builder.Filter(), builder.FindOpts())
+	if err != nil {
+		return err
+	}
+	return cur.All(ctx, res)
 }
 
 func NewDB(client *mongo.Client, dbname string) *Database {

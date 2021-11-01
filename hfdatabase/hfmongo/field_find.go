@@ -7,77 +7,77 @@ import (
 	"strings"
 )
 
-func (f *Filed) LessThan(val Any) *Filed {
+func (f *Field) LessThan(val Any) *Field {
 	return f.op(FindOp.LessThan, OpTypeFind, val)
 }
 
-func (f *Filed) LessThanEqual(val Any) *Filed {
+func (f *Field) LessThanEqual(val Any) *Field {
 	return f.op(FindOp.LessThanEqual, OpTypeFind, val)
 }
 
-func (f *Filed) GreatThan(val Any) *Filed {
+func (f *Field) GreatThan(val Any) *Field {
 	return f.op(FindOp.GreatThan, OpTypeFind, val)
 }
 
-func (f *Filed) GreatThanEqual(val Any) *Filed {
+func (f *Field) GreatThanEqual(val Any) *Field {
 	return f.op(FindOp.GreatThanEqual, OpTypeFind, val)
 }
 
-func (f *Filed) NotEqual(val Any) *Filed {
+func (f *Field) NotEqual(val Any) *Field {
 	return f.op(FindOp.NotEqual, OpTypeFind, val)
 }
 
-func (f *Filed) All(val Any) *Filed {
+func (f *Field) All(val Any) *Field {
 	return f.op(FindOp.All, OpTypeFind, val)
 }
 
 // In (hftypes.IsSlice(val) == true)
-func (f *Filed) In(val Any) *Filed {
+func (f *Field) In(val Any) *Field {
 	return f.op(FindOp.In, OpTypeFind, val)
 }
 
 // NotIn (hftypes.IsSlice(val) == true)
-func (f *Filed) NotIn(val Any) *Filed {
+func (f *Field) NotIn(val Any) *Field {
 	return f.op(FindOp.NotIn, OpTypeFind, val)
 }
 
-func (f *Filed) Size(val Ui) *Filed {
+func (f *Field) Size(val Ui) *Field {
 	return f.op(FindOp.Size, OpTypeFind, val)
 }
 
-func (f *Filed) Exists(val Any) *Filed {
+func (f *Field) Exists(val Any) *Field {
 	return f.op(FindOp.Exists, OpTypeFind, val)
 }
 
-func (f *Filed) Type(val Any) *Filed {
+func (f *Field) Type(val Any) *Field {
 	return f.op(FindOp.Type, OpTypeFind, val)
 }
 
-func (f *Filed) Mod(val Any) *Filed {
+func (f *Field) Mod(val Any) *Field {
 	return f.op(FindOp.Mod, OpTypeFind, val)
 }
 
-func (f *Filed) Regex(val Str) *Filed {
+func (f *Field) Regex(val Str) *Field {
 	return f.op(FindOp.Regex, OpTypeFind, val)
 }
 
-func (f *Filed) Text(val Any) *Filed {
+func (f *Field) Text(val Any) *Field {
 	return f.op(FindOp.Text, OpTypeFind, val)
 }
 
-func (f *Filed) ElemMatch(val MustStructOrPtr) *Filed {
+func (f *Field) ElemMatch(val MustStructOrPtr) *Field {
 	return f.op(FindOp.ElemMatch, OpTypeFind, val)
 }
 
-func (f *Filed) Equal(val Any) *Filed {
+func (f *Field) Equal(val Any) *Field {
 	return f.op(FindOp.Equal, OpTypeFind, val)
 }
 
-func (f *Filed) Hint(val int) *Filed {
+func (f *Field) Hint(val int) *Field {
 	return f.op(QueryOp.Hint, OpTypeQuery, val)
 }
 
-func (f *Filed) Expression(expr string) *Filed {
+func (f *Field) Expression(expr string) *Field {
 	expr = strings.ReplaceAll(expr, " ", "")
 	e, _ := regexp.Compile(`^[0-9]+((<)|(<=)|(>)|(>=))\$((<)|(<=)|(>)|(>=))[0-9]+$`)
 	spilt, _ := regexp.Compile(`(<=)|(>=)|(<)|(>)`)
@@ -116,10 +116,10 @@ const (
 	SortAsc
 )
 
-func (f *Filed) Sort(val SortType) *Filed {
+func (f *Field) Sort(val SortType) *Field {
 	return f.op(QueryOp.Sort, OpTypeQuery, val)
 }
 
-func (f *Filed) Projection(val bool) *Filed {
+func (f *Field) Projection(val bool) *Field {
 	return f.op(QueryOp.Projection, OpTypeQuery, val)
 }

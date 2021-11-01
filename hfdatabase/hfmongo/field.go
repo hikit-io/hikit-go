@@ -23,19 +23,20 @@ type E struct {
 
 type D []E
 
-type Filed struct {
-	name FieldName
-	val  D
+type Field struct {
+	childs map[FieldName]*Field
+	name   FieldName
+	val    D
 }
 
-func (f *Filed) E() bson.E {
+func (f *Field) E() bson.E {
 	return bson.E{
 		Key:   f.name,
 		Value: f.val,
 	}
 }
 
-func (f *Filed) op(opName OpName, opType OpType, val Any) *Filed {
+func (f *Field) op(opName OpName, opType OpType, val Any) *Field {
 	for i := range f.val {
 		if f.val[i].Key == opName {
 			f.val[i].Value = val
@@ -51,4 +52,16 @@ func (f *Filed) op(opName OpName, opType OpType, val Any) *Filed {
 		opType: opType,
 	})
 	return f
+}
+
+func (f *Field) Child(name string) *Field {
+	if f.childs == nil {
+		f.childs = map[FieldName]*Field{}
+	}
+	if f.childs[name] == nil {
+		f.childs[name] = &Field{
+			name: name,
+		}
+	}
+	return f.childs[name]
 }

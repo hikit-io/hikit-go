@@ -1,60 +1,89 @@
 package hfmongo
 
 import (
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"sync"
 )
 
+var (
+	builderPool = sync.Pool{
+		New: func() interface{} {
+			b := &Builder{}
+			b.init()
+			return b
+		},
+	}
+)
+
+func NewBuilder() *Builder {
+	return builderPool.Get().(*Builder)
+}
+
+//Free 之后不可再用
+func (b *Builder) Free() {
+	builderPool.Put(b)
+}
+
 type Builder struct {
-	fields        map[string]*Filed
+	fields        map[string]*Field
 	findOptions   *options.FindOptions
 	updateOptions *options.UpdateOptions
 }
 
-func (o *Builder) Reset() {
-	o.fields = map[string]*Filed{}
-	o.findOptions = &options.FindOptions{}
-	o.updateOptions = &options.UpdateOptions{}
+func (b *Builder) Reset() {
+	b.fields = map[string]*Field{}
+	b.findOptions = &options.FindOptions{}
+	b.updateOptions = &options.UpdateOptions{}
 }
 
-func (o *Builder) Skip(count int64) {
-	o.init()
-	o.findOptions.Skip = &count
+func (b *Builder) Skip(count int64) *Builder {
+	b.init()
+	b.findOptions.Skip = &count
+	return b
 }
 
-func (o *Builder) Limit(count int64) {
-	o.init()
-	o.findOptions.Limit = &count
+func (b *Builder) Limit(count int64) *Builder {
+	b.init()
+	b.findOptions.Limit = &count
+	return b
 }
 
-func (o *Builder) init() {
-	if o.fields == nil {
-		o.fields = map[string]*Filed{}
+func (b *Builder) Upsert(enable bool) *Builder {
+	b.init()
+	b.updateOptions.SetUpsert(enable)
+	return b
+}
+
+func (b *Builder) init() {
+	if b.fields == nil {
+		b.fields = map[string]*Field{}
 	}
-	if o.findOptions == nil {
-		o.findOptions = options.Find()
+	if b.findOptions == nil {
+		b.findOptions = options.Find()
 	}
-	if o.updateOptions == nil {
-		o.updateOptions = options.Update()
+	if b.updateOptions == nil {
+		b.updateOptions = options.Update()
 	}
 }
 
-func (o *Builder) Field(name string) *Filed {
-	o.init()
-	if o.fields[name] == nil {
-		field := &Filed{
+func (b *Builder) Field(name string) *Field {
+	b.init()
+	if b.fields[name] == nil {
+		field := &Field{
+			map[FieldName]*Field{},
 			name,
 			D{},
 		}
-		o.fields[name] = field
+		b.fields[name] = field
 	}
-	return o.fields[name]
+	return b.fields[name]
 }
 
-func (o *Builder) Filter() bson.D {
-	o.init()
+func mergeFindField(prefix string, fields map[string]*Field) bson.D {
 	all := bson.D{}
-	for _, filed := range o.fields {
+	for _, filed := range fields {
 		bsonD := bson.D{}
 		for _, e := range filed.val {
 			if e.opType == OpTypeFind {
@@ -64,9 +93,21 @@ func (o *Builder) Filter() bson.D {
 				})
 			}
 		}
+
+		name := filed.name
+		if prefix != "" {
+			name = fmt.Sprintf("%s.%s", prefix, filed.name)
+		}
+
+		if filed.childs != nil {
+			bd := mergeFindField(name, filed.childs)
+			all = append(all, bd...)
+		}
+
 		if len(bsonD) != 0 {
+
 			bsonE := bson.E{
-				Key:   filed.name,
+				Key:   name,
 				Value: bsonD,
 			}
 			all = append(all, bsonE)
@@ -75,39 +116,100 @@ func (o *Builder) Filter() bson.D {
 	return all
 }
 
-func (o *Builder) Update() bson.D {
-	o.init()
-	all := bson.D{}
-	for _, filed := range o.fields {
-		opMap := map[OpName]bson.D{}
+func (b *Builder) Filter() bson.D {
+	b.init()
+	//all := bson.D{}
+	return mergeFindField("", b.fields)
+	//for _, filed := range b.fields {
+	//	bsonD := bson.D{}
+	//	for _, e := range filed.val {
+	//		if e.opType == OpTypeFind {
+	//			bsonD = append(bsonD, bson.E{
+	//				Key:   e.Key,
+	//				Value: e.Value,
+	//			})
+	//		}
+	//	}
+	//	if len(bsonD) != 0 {
+	//		bsonE := bson.E{
+	//			Key:   filed.name,
+	//			Value: bsonD,
+	//		}
+	//		all = append(all, bsonE)
+	//	}
+	//}
+	//return all
+}
+
+func mergeUpField(prefix string, fields map[string]*Field) map[OpName]bson.D {
+	opMap := map[OpName]bson.D{}
+
+	for _, filed := range fields {
+		name := filed.name
+		if prefix != "" {
+			name = fmt.Sprintf("%s.%s", prefix, filed.name)
+		}
 		for _, e := range filed.val {
 			if e.opType == OpTypeUpdate {
 				opMap[e.Key] = append(opMap[e.Key], bson.E{
-					Key:   filed.name,
+					Key:   name,
 					Value: e.Value,
 				})
 			}
 		}
-		for op, d := range opMap {
-			bsonE := bson.E{
-				Key:   op,
-				Value: d,
+
+		if filed.childs != nil {
+			bd := mergeUpField(name, filed.childs)
+			for opName, d := range bd {
+				opMap[opName] = append(opMap[opName], d...)
 			}
-			all = append(all, bsonE)
 		}
 	}
-	return all
+
+	return opMap
 }
 
-func (o *Builder) Options() *options.FindOptions {
-	o.init()
+func (b *Builder) Update() bson.D {
+	b.init()
+	all := bson.D{}
+	m := mergeUpField("", b.fields)
+	for opName, d := range m {
+		all = append(all, bson.E{
+			Key:   opName,
+			Value: d,
+		})
+	}
+	return all
+	//for _, filed := range b.fields {
+	//	opMap := map[OpName]bson.D{}
+	//	for _, e := range filed.val {
+	//		if e.opType == OpTypeUpdate {
+	//			opMap[e.Key] = append(opMap[e.Key], bson.E{
+	//				Key:   filed.name,
+	//				Value: e.Value,
+	//			})
+	//		}
+	//	}
+	//	for op, d := range opMap {
+	//		bsonE := bson.E{
+	//			Key:   op,
+	//			Value: d,
+	//		}
+	//		all = append(all, bsonE)
+	//	}
+	//}
+	//return all
+}
+
+func (b *Builder) FindOpts() *options.FindOptions {
+	b.init()
 	var (
 		sort bson.D
 		pros bson.D
 		hint bson.D
 	)
 
-	for _, filed := range o.fields {
+	for _, filed := range b.fields {
 		for _, e := range filed.val {
 			if e.opType == OpTypeQuery {
 				switch e.Key {
@@ -122,7 +224,7 @@ func (o *Builder) Options() *options.FindOptions {
 						Value: e.Value,
 					})
 				case QueryOp.Hint:
-					pros = append(pros, bson.E{
+					hint = append(hint, bson.E{
 						Key:   filed.name,
 						Value: e.Value,
 					})
@@ -132,13 +234,39 @@ func (o *Builder) Options() *options.FindOptions {
 
 	}
 	if len(sort) != 0 {
-		o.findOptions.Sort = sort
+		b.findOptions.Sort = sort
 	}
 	if len(pros) != 0 {
-		o.findOptions.Projection = pros
+		b.findOptions.Projection = pros
 	}
 	if len(hint) != 0 {
-		o.findOptions.Hint = hint
+		b.findOptions.Hint = hint
 	}
-	return o.findOptions
+	return b.findOptions
+}
+
+func (b *Builder) UpOpts() *options.UpdateOptions {
+	b.init()
+	var (
+		hint bson.D
+	)
+	for _, filed := range b.fields {
+		for _, e := range filed.val {
+			if e.opType == OpTypeQuery {
+				switch e.Key {
+				case QueryOp.Hint:
+					hint = append(hint, bson.E{
+						Key:   filed.name,
+						Value: e.Value,
+					})
+				}
+			}
+		}
+
+	}
+
+	if len(hint) != 0 {
+		b.updateOptions.Hint = hint
+	}
+	return b.updateOptions
 }
