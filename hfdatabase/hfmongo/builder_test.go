@@ -31,9 +31,22 @@ func Test_mergeField(t *testing.T) {
 
 	op.Field("name").Child("first").Set("nekilc")
 	op.Field("name").Child("first").Child("one").Set("Nie")
-
-	res := mergeFindField("", op.fields)
-	fmt.Println(res.Map())
+	orBd := NewBuilder()
+	orBd.Field("age").GreatThan(10).LessThan(20)
+	op.Or(orBd)
+	op.OrFc(func(b *Builder) {
+		b.Field("address").Equal("shanghai")
+	})
+	//res := mergeFindField("", op.fields)
+	fmt.Println(op.Filter().Map())
 	//fmt.Println(mergeUpField("", op.fields).Map())
 	fmt.Println(op.Update().Map())
+}
+
+func TestModel(t *testing.T) {
+	type M struct {
+		Model
+	}
+	var m interface{} = &M{}
+	fmt.Println(m.(*Model))
 }

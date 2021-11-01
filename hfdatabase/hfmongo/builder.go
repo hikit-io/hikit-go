@@ -28,6 +28,7 @@ func (b *Builder) Free() {
 
 type Builder struct {
 	fields        map[string]*Field
+	logicFields   []bson.D
 	findOptions   *options.FindOptions
 	updateOptions *options.UpdateOptions
 }
@@ -118,8 +119,14 @@ func mergeFindField(prefix string, fields map[string]*Field) bson.D {
 
 func (b *Builder) Filter() bson.D {
 	b.init()
-	//all := bson.D{}
-	return mergeFindField("", b.fields)
+	all := mergeFindField("", b.fields)
+	if len(b.logicFields) != 0 {
+		all = append(all, bson.E{
+			Key:   LogicOp.Or,
+			Value: b.logicFields,
+		})
+	}
+	return all
 	//for _, filed := range b.fields {
 	//	bsonD := bson.D{}
 	//	for _, e := range filed.val {
@@ -269,4 +276,18 @@ func (b *Builder) UpOpts() *options.UpdateOptions {
 		b.updateOptions.Hint = hint
 	}
 	return b.updateOptions
+}
+
+type BuilderOrFc = interface{}
+
+func (b *Builder) Or(bs *Builder) *Builder {
+	b.logicFields = append(b.logicFields, bs.Filter())
+	return b
+}
+
+func (b *Builder) OrFc(fc func(br *Builder)) *Builder {
+	bs := NewBuilder()
+	fc(bs)
+	b.logicFields = append(b.logicFields, bs.Filter())
+	return b
 }
