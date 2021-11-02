@@ -18,7 +18,7 @@ var (
 )
 
 func NewBuilder() *Builder {
-	return builderPool.Get().(*Builder)
+	return builderPool.Get().(*Builder).Reset()
 }
 
 //Free 之后不可再用
@@ -28,15 +28,17 @@ func (b *Builder) Free() {
 
 type Builder struct {
 	fields        map[string]*Field
-	logicFields   []bson.D
+	logicFields   map[string][]bson.D
 	findOptions   *options.FindOptions
 	updateOptions *options.UpdateOptions
 }
 
-func (b *Builder) Reset() {
+func (b *Builder) Reset() *Builder {
 	b.fields = map[string]*Field{}
 	b.findOptions = &options.FindOptions{}
 	b.updateOptions = &options.UpdateOptions{}
+	b.logicFields = map[string][]bson.D{}
+	return b
 }
 
 func (b *Builder) Skip(count int64) *Builder {
@@ -66,6 +68,9 @@ func (b *Builder) init() {
 	}
 	if b.updateOptions == nil {
 		b.updateOptions = options.Update()
+	}
+	if b.logicFields == nil {
+		b.logicFields = map[string][]bson.D{}
 	}
 }
 
@@ -120,11 +125,13 @@ func mergeFindField(prefix string, fields map[string]*Field) bson.D {
 func (b *Builder) Filter() bson.D {
 	b.init()
 	all := mergeFindField("", b.fields)
-	if len(b.logicFields) != 0 {
-		all = append(all, bson.E{
-			Key:   LogicOp.Or,
-			Value: b.logicFields,
-		})
+	for opName, bd := range b.logicFields {
+		if len(bd) != 0 {
+			all = append(all, bson.E{
+				Key:   opName,
+				Value: b.logicFields[opName],
+			})
+		}
 	}
 	return all
 	//for _, filed := range b.fields {
@@ -281,13 +288,27 @@ func (b *Builder) UpOpts() *options.UpdateOptions {
 type BuilderOrFc = interface{}
 
 func (b *Builder) Or(bs *Builder) *Builder {
-	b.logicFields = append(b.logicFields, bs.Filter())
+	b.logicFields[LogicOp.Or] = append(b.logicFields[LogicOp.Or], bs.Filter())
 	return b
 }
 
 func (b *Builder) OrFc(fc func(br *Builder)) *Builder {
 	bs := NewBuilder()
 	fc(bs)
-	b.logicFields = append(b.logicFields, bs.Filter())
+	b.logicFields[LogicOp.Or] = append(b.logicFields[LogicOp.Or], bs.Filter())
+	bs.Free()
+	return b
+}
+
+func (b *Builder) Nor(bs *Builder) *Builder {
+	b.logicFields[LogicOp.Nor] = append(b.logicFields[LogicOp.Nor], bs.Filter())
+	return b
+}
+
+func (b *Builder) NorFc(fc func(br *Builder)) *Builder {
+	bs := NewBuilder()
+	fc(bs)
+	b.logicFields[LogicOp.Nor] = append(b.logicFields[LogicOp.Nor], bs.Filter())
+	bs.Free()
 	return b
 }
