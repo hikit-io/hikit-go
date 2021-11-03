@@ -1,7 +1,9 @@
 package hfmongo
 
 import (
+	"encoding/json"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"testing"
 )
 
@@ -18,27 +20,33 @@ func TestOp(t *testing.T) {
 }
 
 func Test_mergeField(t *testing.T) {
-	op := Builder{}
-	op.Field("name").Equal("NieAowei")
-	op.Field("name").Equal("NieAowei1")
-	op.Field("name").LessThan(10)
-	op.Field("age").Equal(18)
-	op.Field("name").Child("first").Equal("Nie")
-	op.Field("name").Child("first").Child("one").Equal("Nie")
+	op := NewBuilder()
+	//op.Field("name").Equal("NieAowei")
+	//op.Field("name").Equal("NieAowei1")
+	//op.Field("name").LessThan(10)
+	//op.Field("age").Equal(18)
+	//op.Field("name").Child("first").Equal("Nie")
+	//op.Field("name").Child("first").Child("one").Equal("Nie")
+	//
+	//op.Field("name").Set("nieaowei")
+	//op.Field("age").Set(100)
 
-	op.Field("name").Set("nieaowei")
-	op.Field("age").Set(100)
-
-	op.Field("name").Child("first").Set("nekilc")
-	op.Field("name").Child("first").Child("one").Set("Nie")
+	//op.Field("name").Child("first").Set("nekilc")
+	//op.Field("name").Child("first").Child("one").Set("Nie")
 	orBd := NewBuilder()
 	orBd.Field("age").GreatThan(10).LessThan(20)
 	op.Or(orBd)
 	op.OrFc(func(b *Builder) {
 		b.Field("address").Equal("shanghai")
 	})
+	op.NorFc(func(br *Builder) {
+		br.Field("name").Equal("hfunc1")
+	})
+
 	//res := mergeFindField("", op.fields)
-	fmt.Println(op.Filter().Map())
+	bs, _ := json.Marshal(op.Filter().Map())
+
+	fmt.Println(string(bs))
 	//fmt.Println(mergeUpField("", op.fields).Map())
 	fmt.Println(op.Update().Map())
 }
@@ -47,6 +55,21 @@ func TestModel(t *testing.T) {
 	type M struct {
 		Model
 	}
-	var m interface{} = &M{}
-	fmt.Println(m.(*Model))
+	//var m interface{} = &M{}
+	_ = []Model{
+		{
+			ID:         primitive.ObjectID{},
+			DeleteTime: nil,
+			CreateTime: nil,
+			UpdateTime: nil,
+		},
+		{
+			ID:         primitive.ObjectID{},
+			DeleteTime: nil,
+			CreateTime: nil,
+			UpdateTime: nil,
+		},
+	}
+	//fmt.Println(m.(*Model))
+	//rv := reflect.ValueOf(ms)
 }
