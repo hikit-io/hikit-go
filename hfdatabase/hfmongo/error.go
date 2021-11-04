@@ -28,6 +28,14 @@ func (e err) ExceptNoDocuments() error {
 	return e
 }
 
+func (e err) NotNil() bool {
+	return e.error != nil
+}
+
+func (e err) Err() error {
+	return e.error
+}
+
 func IsErrNoDocuments(err error) bool {
 	return errors.Is(err, mongo.ErrNoDocuments)
 }
@@ -41,25 +49,34 @@ func ExceptNoDocuments(err error) error {
 
 type UpdateResult struct {
 	err
-	mongo.UpdateResult
+	*mongo.UpdateResult
 }
 
 type SingleResult struct {
 	err
-	mongo.SingleResult
+	*mongo.SingleResult
 }
 
 type InsertOneResult struct {
 	err
-	mongo.InsertOneResult
+	*mongo.InsertOneResult
 }
 
 type InsertManyResult struct {
 	err
-	mongo.InsertManyResult
+	*mongo.InsertManyResult
 }
 
 type DeleteResult struct {
 	err
-	mongo.DeleteResult
+	*mongo.DeleteResult
+}
+
+type FindResult struct {
+	err
+}
+
+type CountResult struct {
+	err
+	Count int64
 }

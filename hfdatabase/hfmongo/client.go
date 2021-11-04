@@ -3,6 +3,7 @@ package hfmongo
 import (
 	"context"
 	. "github.com/hfunc/hfunc-go/hftypes"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
@@ -88,11 +89,7 @@ func (c *Collection) HFindOne(ctx context.Context, val MustPtr, res MustSlicePtr
 			r.Err(),
 		}
 	}
-	e := r.Decode(res)
-	if e != nil {
-		return r, err{e}
-	}
-	return r, nil
+	return r, err{r.Decode(res)}
 }
 
 type mergeOpts struct {
@@ -127,6 +124,16 @@ func (m mergeOpts) ToFindOneAndReplaceOptions() *options.FindOneAndReplaceOption
 	}
 }
 
+func (m mergeOpts) ToFindOneAndDeleteOptions() *options.FindOneAndDeleteOptions {
+	return &options.FindOneAndDeleteOptions{
+		Collation:  m.f.Collation,
+		MaxTime:    m.f.MaxTime,
+		Projection: m.f.Projection,
+		Sort:       m.f.Sort,
+		Hint:       m.f.Hint,
+	}
+}
+
 func (m mergeOpts) ToFindOneOptions() *options.FindOneOptions {
 	return &options.FindOneOptions{
 		AllowPartialResults: m.f.AllowPartialResults,
@@ -150,7 +157,33 @@ func (m mergeOpts) ToFindOneOptions() *options.FindOneOptions {
 	}
 }
 
-func (c *Collection) HFindOneAndUpdate(ctx context.Context, condition MustPtr, update, updateRes MustSlicePtr, opts ...*options.FindOneAndUpdateOptions) (*mongo.SingleResult, Error) {
+func (m mergeOpts) ToCountOptions() *options.CountOptions {
+	return &options.CountOptions{
+		Collation: m.f.Collation,
+		Hint:      m.f.Hint,
+		MaxTime:   m.f.MaxTime,
+		Skip:      m.f.Skip,
+		Limit:     m.f.Limit,
+	}
+}
+
+func (m mergeOpts) ToDeleteOptions() *options.DeleteOptions {
+	return &options.DeleteOptions{
+		Collation: m.f.Collation,
+		Hint:      m.f.Hint,
+	}
+}
+
+func (m mergeOpts) ToReplaceOptions() *options.ReplaceOptions {
+	return &options.ReplaceOptions{
+		BypassDocumentValidation: m.u.BypassDocumentValidation,
+		Collation:                m.f.Collation,
+		Hint:                     m.f.Hint,
+		Upsert:                   m.u.Upsert,
+	}
+}
+
+func (c *Collection) HFindOneAndUpdate(ctx context.Context, condition MustPtr, update, updateRes MustSlicePtr, opts ...*options.FindOneAndUpdateOptions) *SingleResult {
 	builder := NewBuilder().parseVal(condition, Find).parseVal(update, Update).parseVal(updateRes, Projection)
 	opt := options.MergeFindOneAndUpdateOptions(append(opts, mergeOpts{builder.FindOpts(), builder.UpOpts()}.ToFindOneAndUpdateOptions())...)
 	r := c.Collection.FindOneAndUpdate(ctx,
@@ -158,16 +191,18 @@ func (c *Collection) HFindOneAndUpdate(ctx context.Context, condition MustPtr, u
 		opt,
 	)
 	if r.Err() != nil {
-		return r, err{
-			r.Err(),
+		return &SingleResult{
+			err:          err{r.Err()},
+			SingleResult: r,
 		}
 	}
-	return r, err{
-		r.Decode(updateRes),
+	return &SingleResult{
+		err:          err{r.Decode(updateRes)},
+		SingleResult: r,
 	}
 }
 
-func (c *Collection) HFindOneAndReplace(ctx context.Context, condition, replace Any, res MustSlicePtr, opts ...*options.FindOneAndReplaceOptions) (*mongo.SingleResult, Error) {
+func (c *Collection) HFindOneAndReplace(ctx context.Context, condition, replace Any, res MustSlicePtr, opts ...*options.FindOneAndReplaceOptions) *SingleResult {
 	builder := NewBuilder().parseVal(condition, Find).parseVal(res, Projection)
 	opt := options.MergeFindOneAndReplaceOptions(append(opts, mergeOpts{builder.FindOpts(), builder.UpOpts()}.ToFindOneAndReplaceOptions())...)
 
@@ -175,12 +210,33 @@ func (c *Collection) HFindOneAndReplace(ctx context.Context, condition, replace 
 		builder.Filter(), replace,
 		opt)
 	if r.Err() != nil {
-		return r, err{
-			r.Err(),
+		return &SingleResult{
+			err:          err{r.Err()},
+			SingleResult: r,
 		}
 	}
-	return r, err{
-		r.Decode(res),
+	return &SingleResult{
+		err:          err{r.Decode(res)},
+		SingleResult: r,
+	}
+}
+
+func (c *Collection) HFindOneAndDelete(ctx context.Context, condition MustPtr, updateRes MustSlicePtr, opts ...*options.FindOneAndDeleteOptions) *SingleResult {
+	builder := NewBuilder().parseVal(condition, Find).parseVal(updateRes, Projection)
+	opt := options.MergeFindOneAndDeleteOptions(append(opts, mergeOpts{builder.FindOpts(), builder.UpOpts()}.ToFindOneAndDeleteOptions())...)
+	r := c.Collection.FindOneAndDelete(ctx,
+		builder.Filter(),
+		opt,
+	)
+	if r.Err() != nil {
+		return &SingleResult{
+			err:          err{r.Err()},
+			SingleResult: r,
+		}
+	}
+	return &SingleResult{
+		err:          err{r.Decode(updateRes)},
+		SingleResult: r,
 	}
 }
 
@@ -371,60 +427,90 @@ func (b *Builder) parseVal(val MustPtr, pt parseType) *Builder {
 	return b
 }
 
-func (c *Collection) HFind(ctx context.Context, condition MustPtr, res MustSlicePtr, opts ...*options.FindOptions) Error {
+func (c *Collection) HFind(ctx context.Context, condition MustPtr, res MustSlicePtr, opts ...*options.FindOptions) *FindResult {
 	builder := NewBuilder().parseVal(condition, Find).parseVal(res, Projection)
 	opt := options.MergeFindOptions(append(opts, builder.FindOpts())...)
 
 	cur, e := c.Collection.Find(ctx, builder.Filter(), opt)
 	if e != nil {
-		return err{e}
+		return &FindResult{
+			err{e},
+		}
 	}
-	if e = cur.All(ctx, res); e != nil {
-		return err{e}
-	}
-	return nil
+	return &FindResult{err{cur.All(ctx, res)}}
 }
 
-func (c *Collection) HUpdateOne(ctx context.Context, condition, update MustPtr, opts ...*options.UpdateOptions) (*mongo.UpdateResult, Error) {
+func (c *Collection) HUpdateOne(ctx context.Context, condition, update MustPtr, opts ...*options.UpdateOptions) *UpdateResult {
 	builder := NewBuilder().parseVal(condition, Find).parseVal(update, Update)
 	opt := options.MergeUpdateOptions(append(opts, builder.UpOpts())...)
 
 	cur, e := c.Collection.UpdateOne(ctx, builder.Filter(), builder.Update(), opt)
-	return cur, err{e}
+	return &UpdateResult{
+		err:          err{e},
+		UpdateResult: cur,
+	}
 }
 
-func (c *Collection) HUpdateMany(ctx context.Context, condition, update MustPtr, opts ...*options.UpdateOptions) (*mongo.UpdateResult, Error) {
+func (c *Collection) HUpdateMany(ctx context.Context, condition, update MustPtr, opts ...*options.UpdateOptions) *UpdateResult {
 	builder := NewBuilder().parseVal(condition, Find).parseVal(update, Update)
 	opt := options.MergeUpdateOptions(append(opts, builder.UpOpts())...)
 
 	cur, e := c.Collection.UpdateMany(ctx, builder.Filter(), builder.Update(), opt)
-	return cur, err{e}
+	return &UpdateResult{
+		err:          err{e},
+		UpdateResult: cur,
+	}
 }
 
-func (c *Collection) Count(ctx context.Context) {
-	//c.Collection.CountDocuments()
-	//todo
+func (c *Collection) HCount(ctx context.Context, condition MustPtr, opts ...*options.CountOptions) *CountResult {
+	builder := NewBuilder().parseVal(condition, Find)
+	opt := options.MergeCountOptions(append(opts, mergeOpts{f: builder.FindOpts()}.ToCountOptions())...)
+	count, e := c.Collection.CountDocuments(ctx, builder.Filter(), opt)
+	return &CountResult{
+		err:   err{e},
+		Count: count,
+	}
 }
 
-func (c *Collection) HDeleteOne() {
-	//c.Collection.DeleteOne()
-	// todo
+func (c *Collection) HDeleteOne(ctx context.Context, condition MustPtr, opts ...*options.DeleteOptions) *DeleteResult {
+	builder := NewBuilder().parseVal(condition, Find)
+	opt := options.MergeDeleteOptions(append(opts, mergeOpts{f: builder.FindOpts()}.ToDeleteOptions())...)
+	r, e := c.Collection.DeleteOne(ctx, builder.Filter(), opt)
+	return &DeleteResult{
+		err:          err{e},
+		DeleteResult: r,
+	}
 }
 
-func (c *Collection) HDeleteMany() {
-	//c.Collection.DeleteOne()
-	// todo
+func (c *Collection) HDeleteMany(ctx context.Context, condition MustPtr, opts ...*options.DeleteOptions) *DeleteResult {
+	builder := NewBuilder().parseVal(condition, Find)
+	opt := options.MergeDeleteOptions(append(opts, mergeOpts{f: builder.FindOpts()}.ToDeleteOptions())...)
+	r, e := c.Collection.DeleteMany(ctx, builder.Filter(), opt)
+	return &DeleteResult{
+		err:          err{e},
+		DeleteResult: r,
+	}
 }
 
-func (c *Collection) HFindOneAndDelete() {
-	//c.Collection.FindOneAndDelete()
-	// todo
+func (c *Collection) HReplaceOne(ctx context.Context, condition MustPtr, newDoc MustPtr, opts ...*options.ReplaceOptions) *UpdateResult {
+	builder := NewBuilder().parseVal(condition, Find)
+	opt := options.MergeReplaceOptions(append(opts, mergeOpts{f: builder.FindOpts(), u: builder.UpOpts()}.ToReplaceOptions())...)
+	r, e := c.Collection.ReplaceOne(ctx, builder.Filter(), newDoc, opt)
+	return &UpdateResult{
+		err:          err{e},
+		UpdateResult: r,
+	}
 }
 
 func NewDB(client *mongo.Client, dbname string) *Database {
-	return &Database{
+	db := &Database{
 		dbname: dbname,
 		Client: client,
 		tables: map[TableName]*Collection{},
 	}
+	tableNames, _ := db.DB().ListCollectionNames(context.Background(), bson.D{})
+	for _, name := range tableNames {
+		db.Col(name)
+	}
+	return db
 }
