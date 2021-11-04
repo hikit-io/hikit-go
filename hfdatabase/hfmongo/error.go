@@ -54,7 +54,6 @@ type UpdateResult struct {
 
 type SingleResult struct {
 	err
-	*mongo.SingleResult
 }
 
 type InsertOneResult struct {

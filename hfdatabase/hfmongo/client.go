@@ -63,12 +63,12 @@ func (c *Database) Col(model Any) *Collection {
 	return col
 }
 
-func (c *Collection) HInsertOne(ctx context.Context, doc Any, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, Error) {
+func (c *Collection) HInsertOne(ctx context.Context, doc Any, opts ...*options.InsertOneOptions) *InsertOneResult {
 	r, e := c.Collection.InsertOne(ctx, doc, opts...)
-	return r, err{e}
+	return &InsertOneResult{err{e}, r}
 }
 
-func (c *Collection) HInsertMany(ctx context.Context, docs Any, opts ...*options.InsertManyOptions) (*mongo.InsertManyResult, Error) {
+func (c *Collection) HInsertMany(ctx context.Context, docs Any, opts ...*options.InsertManyOptions) *InsertManyResult {
 	var idocs Anys
 	switch i := docs.(type) {
 	case []interface{}:
@@ -77,19 +77,21 @@ func (c *Collection) HInsertMany(ctx context.Context, docs Any, opts ...*options
 		idocs = AnyToSliceAny(docs)
 	}
 	r, e := c.Collection.InsertMany(ctx, idocs, opts...)
-	return r, err{e}
+	return &InsertManyResult{err{e}, r}
 }
 
-func (c *Collection) HFindOne(ctx context.Context, val MustPtr, res MustSlicePtr, opts ...*options.FindOneOptions) (*mongo.SingleResult, Error) {
+func (c *Collection) HFindOne(ctx context.Context, val MustPtr, res MustSlicePtr, opts ...*options.FindOneOptions) *SingleResult {
 	builder := NewBuilder().parseVal(val, Find)
 	opt := options.MergeFindOneOptions(append(opts, mergeOpts{f: builder.FindOpts()}.ToFindOneOptions())...)
 	r := c.Collection.FindOne(ctx, builder.Filter(), opt)
 	if r.Err() != nil {
-		return r, err{
-			r.Err(),
+		return &SingleResult{
+			err{r.Err()},
 		}
 	}
-	return r, err{r.Decode(res)}
+	return &SingleResult{
+		err{r.Decode(res)},
+	}
 }
 
 type mergeOpts struct {
@@ -192,13 +194,11 @@ func (c *Collection) HFindOneAndUpdate(ctx context.Context, condition MustPtr, u
 	)
 	if r.Err() != nil {
 		return &SingleResult{
-			err:          err{r.Err()},
-			SingleResult: r,
+			err: err{r.Err()},
 		}
 	}
 	return &SingleResult{
-		err:          err{r.Decode(updateRes)},
-		SingleResult: r,
+		err: err{r.Decode(updateRes)},
 	}
 }
 
@@ -211,13 +211,11 @@ func (c *Collection) HFindOneAndReplace(ctx context.Context, condition, replace 
 		opt)
 	if r.Err() != nil {
 		return &SingleResult{
-			err:          err{r.Err()},
-			SingleResult: r,
+			err: err{r.Err()},
 		}
 	}
 	return &SingleResult{
-		err:          err{r.Decode(res)},
-		SingleResult: r,
+		err: err{r.Decode(res)},
 	}
 }
 
@@ -230,13 +228,11 @@ func (c *Collection) HFindOneAndDelete(ctx context.Context, condition MustPtr, u
 	)
 	if r.Err() != nil {
 		return &SingleResult{
-			err:          err{r.Err()},
-			SingleResult: r,
+			err: err{r.Err()},
 		}
 	}
 	return &SingleResult{
-		err:          err{r.Decode(updateRes)},
-		SingleResult: r,
+		err: err{r.Decode(updateRes)},
 	}
 }
 
