@@ -28,6 +28,7 @@ const (
 
 type (
 	Any  = interface{}
+	Anys = []interface{}
 	Str  = string
 	B    = bool
 	F32  = float32
