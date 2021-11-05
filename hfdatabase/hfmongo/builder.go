@@ -59,6 +59,12 @@ func (b *Builder) Upsert(enable bool) *Builder {
 	return b
 }
 
+func (b *Builder) BypassDocumentValidation(enable bool) *Builder {
+	b.init()
+	b.updateOptions.SetBypassDocumentValidation(enable)
+	return b
+}
+
 func (b *Builder) init() {
 	if b.fields == nil {
 		b.fields = map[string]*Field{}
@@ -105,8 +111,8 @@ func mergeFindField(prefix string, fields map[string]*Field) bson.D {
 			name = fmt.Sprintf("%s.%s", prefix, filed.name)
 		}
 
-		if filed.childs != nil {
-			bd := mergeFindField(name, filed.childs)
+		if filed.chs != nil {
+			bd := mergeFindField(name, filed.chs)
 			all = append(all, bd...)
 		}
 
@@ -172,8 +178,8 @@ func mergeUpField(prefix string, fields map[string]*Field) map[OpName]bson.D {
 			}
 		}
 
-		if filed.childs != nil {
-			bd := mergeUpField(name, filed.childs)
+		if filed.chs != nil {
+			bd := mergeUpField(name, filed.chs)
 			for opName, d := range bd {
 				opMap[opName] = append(opMap[opName], d...)
 			}

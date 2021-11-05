@@ -77,6 +77,10 @@ func (f *Field) Hint(val int) *Field {
 	return f.op(QueryOp.Hint, OpTypeQuery, val)
 }
 
+func (f *Field) Max(val Any) *Field {
+	return f.op(UpdateOp.Max, OpTypeUpdate, val)
+}
+
 func (f *Field) Expression(expr string) *Field {
 	expr = strings.ReplaceAll(expr, " ", "")
 	e, _ := regexp.Compile(`^[0-9]+((<)|(<=)|(>)|(>=))\$((<)|(<=)|(>)|(>=))[0-9]+$`)

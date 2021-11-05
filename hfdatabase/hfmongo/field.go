@@ -24,9 +24,9 @@ type E struct {
 type D []E
 
 type Field struct {
-	childs map[FieldName]*Field
-	name   FieldName
-	val    D
+	chs  map[FieldName]*Field
+	name FieldName
+	val  D
 }
 
 func (f *Field) E() bson.E {
@@ -55,13 +55,13 @@ func (f *Field) op(opName OpName, opType OpType, val Any) *Field {
 }
 
 func (f *Field) Child(name string) *Field {
-	if f.childs == nil {
-		f.childs = map[FieldName]*Field{}
+	if f.chs == nil {
+		f.chs = map[FieldName]*Field{}
 	}
-	if f.childs[name] == nil {
-		f.childs[name] = &Field{
+	if f.chs[name] == nil {
+		f.chs[name] = &Field{
 			name: name,
 		}
 	}
-	return f.childs[name]
+	return f.chs[name]
 }
