@@ -1,0 +1,133 @@
+definitions:
+  main.DeleteUserByIdParams:
+    type: object
+  main.DeleteUserByIdResp:
+    type: object
+  main.GetUserByIdResp:
+    type: object
+  main.GetUserListResp:
+    type: object
+  main.PatchUserByIdParams:
+    type: object
+  main.PatchUserByIdResp:
+    type: object
+  main.PostUserByIdNameParams:
+    type: object
+  main.PostUserByIdNameResp:
+    type: object
+  main.PostUserByIdResp:
+    type: object
+  main.PutUserByIdResp:
+    type: object
+info:
+  contact: {}
+paths:
+  /v1/hfunc/user/:id:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: ' '
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.DeleteUserByIdParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.DeleteUserByIdResp'
+      tags:
+      - ""
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.GetUserByIdResp'
+      tags:
+      - ""
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: ' '
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.PatchUserByIdParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.PatchUserByIdResp'
+      tags:
+      - ""
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.PostUserByIdResp'
+      tags:
+      - ""
+    put:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.PutUserByIdResp'
+      tags:
+      - ""
+  /v1/hfunc/user/:id/name:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ' '
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.PostUserByIdNameParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.PostUserByIdNameResp'
+      tags:
+      - ""
+  /v1/hfunc/user/list:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.GetUserListResp'
+      tags:
+      - ""
+swagger: "2.0"

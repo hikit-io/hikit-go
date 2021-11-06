@@ -2,7 +2,6 @@ package rtm
 
 import (
 	"fmt"
-	. "github.com/hfunc/hfunc-go/hftypes"
 	"net/http"
 )
 

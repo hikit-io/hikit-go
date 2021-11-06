@@ -1,4 +1,4 @@
-module github.com/hfunc/hfunc-go
+module github.com/hikit-io/hikit-go
 
 go 1.16
 
