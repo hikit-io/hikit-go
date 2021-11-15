@@ -1,5 +1,9 @@
 package hkmongo
 
+import (
+	. "go.hikit.io/hikit/hktypes"
+)
+
 var LogicOp = _LogicOp{
 	And: "$and",
 	Not: "$not",

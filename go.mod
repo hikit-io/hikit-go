@@ -1,4 +1,4 @@
-module github.com/hikit-io/hikit-go
+module go.hikit.io/hikit
 
 go 1.16
 

@@ -2,6 +2,7 @@ package hkmongo
 
 import (
 	"context"
+	. "go.hikit.io/hikit/hktypes"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
 )

@@ -1,6 +1,7 @@
 package hkmongo
 
 import (
+	. "go.hikit.io/hikit/hktypes"
 	"regexp"
 	"strconv"
 	"strings"

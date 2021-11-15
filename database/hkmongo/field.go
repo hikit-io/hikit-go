@@ -1,7 +1,7 @@
 package hkmongo
 
 import (
-	. "github.com/hikit-io/hikit-go/hktypes"
+	. "go.hikit.io/hikit/hktypes"
 	"go.mongodb.org/mongo-driver/bson"
 )
 

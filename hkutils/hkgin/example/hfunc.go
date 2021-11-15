@@ -14,11 +14,11 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/hikit-io/hikit-go/hkctx"
-	"github.com/hikit-io/hikit-go/hklog"
-	"github.com/hikit-io/hikit-go/hkutils/hkgin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.hikit.io/hikit/hkctx"
+	"go.hikit.io/hikit/hklog"
+	"go.hikit.io/hikit/hkutils/hkgin"
 	"go.uber.org/zap"
 )
 

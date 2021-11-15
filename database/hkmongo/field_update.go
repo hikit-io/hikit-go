@@ -1,5 +1,9 @@
 package hkmongo
 
+import (
+	. "go.hikit.io/hikit/hktypes"
+)
+
 func (f *Field) Set(val Any) *Field {
 	return f.op(UpdateOp.Set, OpTypeUpdate, val)
 }
