@@ -1,7 +1,7 @@
 package hklog
 
 import (
-	"go.hikit.io/hikit/hkctx"
+	"go.hikit.io/hkctx"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

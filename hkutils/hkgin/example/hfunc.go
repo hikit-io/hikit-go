@@ -16,9 +16,9 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"go.hikit.io/hikit/hkctx"
-	"go.hikit.io/hikit/hklog"
-	"go.hikit.io/hikit/hkutils/hkgin"
+	"go.hikit.io/hkctx"
+	"go.hikit.io/hklog"
+	"go.hikit.io/hkutils/hkgin"
 	"go.uber.org/zap"
 )
 

@@ -1,7 +1,7 @@
 package hkmongo
 
 import (
-	. "go.hikit.io/hikit/hktypes"
+	. "go.hikit.io/hktypes"
 )
 
 var LogicOp = _LogicOp{

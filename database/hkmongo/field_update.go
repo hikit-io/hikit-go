@@ -1,7 +1,7 @@
 package hkmongo
 
 import (
-	. "go.hikit.io/hikit/hktypes"
+	. "go.hikit.io/hktypes"
 )
 
 func (f *Field) Set(val Any) *Field {

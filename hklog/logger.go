@@ -1,6 +1,6 @@
 package hklog
 
-import "go.hikit.io/hikit/hkctx"
+import "go.hikit.io/hkctx"
 
 type Logger interface {
 	Info(ctx hkctx.Ctx)

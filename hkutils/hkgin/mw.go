@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/google/uuid"
-	"go.hikit.io/hikit/hkctx"
+	"go.hikit.io/hkctx"
 	"go.uber.org/zap"
 	"net/http"
 	"time"

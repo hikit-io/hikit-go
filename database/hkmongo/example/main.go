@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/hikit-io/hikit-go/database/hkmongo"
+	"go.hikit.io/database/hkmongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -34,8 +34,11 @@ func init() {
 
 type Test struct {
 	Name string `json:"name" bson:"name"`
-	Age  int64  `json:"age" bson:"age"`
+	Age  uint8  `json:"age" bson:"age"`
 	Addr string `json:"addr" bson:"addr"`
+}
+type TestAge struct {
+	Age int32 `bson:"age"`
 }
 
 func (t Test) DocName() string {
@@ -43,6 +46,12 @@ func (t Test) DocName() string {
 }
 
 func main() {
+	e := db.Col(Test{}).HInsertOne(ctx, &Test{
+		Age: 111,
+	})
+	if e.NotNil() {
+		panic(e.Err())
+	}
 
 	builder := hkmongo.NewBuilder()
 	//builder.Field("name").Regex("nieaowei")
@@ -52,9 +61,9 @@ func main() {
 	}).OrFc(func(br *hkmongo.Builder) {
 		br.Field("age").Equal(11)
 	})
-	ts := []Test{}
+	ts := []TestAge{}
 
-	err := db.Col("test").Limit(1).HFind(ctx, builder, &ts)
+	err := db.Col("test").HFind(ctx, builder, &ts)
 	if err.Err() != nil {
 		panic(err)
 	}
