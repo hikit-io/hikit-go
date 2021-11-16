@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"go.hikit.io/database/hkmongo"
+	"go.hikit.io/database/hkmg"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -19,7 +19,7 @@ type User struct {
 var col *mongo.Collection
 var ctx = context.Background()
 
-var db *hkmongo.Database
+var db *hkmg.Database
 
 func init() {
 	ctx := context.Background()
@@ -27,7 +27,7 @@ func init() {
 	o.ApplyURI(url)
 	cli, _ := mongo.NewClient(o)
 	cli.Connect(ctx)
-	db = hkmongo.NewDB(cli, "test")
+	db = hkmg.NewDB(cli, "test")
 	//col = db.Collection("test")
 
 }
@@ -53,12 +53,12 @@ func main() {
 		panic(e.Err())
 	}
 
-	builder := hkmongo.NewBuilder()
+	builder := hkmg.NewBuilder()
 	//builder.Field("name").Regex("nieaowei")
 	//builder.Field("age").LessThan(30)
-	builder.OrFc(func(br *hkmongo.Builder) {
+	builder.OrFc(func(br *hkmg.Builder) {
 		br.Field("name").Equal("nieaowei")
-	}).OrFc(func(br *hkmongo.Builder) {
+	}).OrFc(func(br *hkmg.Builder) {
 		br.Field("age").Equal(11)
 	})
 	ts := []TestAge{}

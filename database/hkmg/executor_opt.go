@@ -1,4 +1,4 @@
-package hkmongo
+package hkmg
 
 import "go.mongodb.org/mongo-driver/mongo/options"
 

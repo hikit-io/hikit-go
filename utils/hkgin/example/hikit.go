@@ -18,14 +18,14 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.hikit.io/hkctx"
 	"go.hikit.io/hklog"
-	"go.hikit.io/hkutils/hkgin"
+	"go.hikit.io/utils/hkgin"
 	"go.uber.org/zap"
 )
 
 type _Controller struct{}
 
 func (_ _Controller) GroupName() string {
-	return "hfunc"
+	return "hikit"
 }
 
 type logger struct{}
@@ -254,7 +254,7 @@ type PostUserByIdNameResp struct {
 // @Router /v1/hfunc/user/:id/name [Post]
 // @Security ApiKeyAuth
 func (c _Controller) PostUserByIdName() (version string, handlers []gin.HandlerFunc) {
-	return "v`", []gin.HandlerFunc{
+	return "v1", []gin.HandlerFunc{
 		func(c *gin.Context) {
 			var (
 				err error

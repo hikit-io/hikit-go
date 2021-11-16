@@ -1,4 +1,4 @@
-package hkmongo
+package hkmg
 
 import (
 	. "go.hikit.io/hktypes"

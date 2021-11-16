@@ -1,4 +1,4 @@
-package hkmongo
+package hkmg
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 )
 
 func TestOp(t *testing.T) {
-	//col := (&mongo.Client{}).Database("d").Collection("s")
+	//col := (&hkmg.Client{}).Database("d").Collection("s")
 	op := Builder{}
 	op.Field("name").In([]string{"123", "ewq"})
 	t.Log(op.Filter())

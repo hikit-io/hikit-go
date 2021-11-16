@@ -1,4 +1,4 @@
-package hkmongo
+package hkmg
 
 var (
 	UpdateOp = updateOp{

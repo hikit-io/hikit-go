@@ -1,4 +1,4 @@
-# hfgin
+# hkgin
 
 ## Feature
 
@@ -20,9 +20,9 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/hfunc/hfunc-go/hfctx"
-	"github.com/hfunc/hfunc-go/hflog"
-	"github.com/hfunc/hfunc-go/hfutils/hfgin"
+	"go.hikit.io/hkctx"
+	"go.hikit.io/hklog"
+	"go.hikit.io/hkutils/hkgin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -31,27 +31,27 @@ import (
 type _Controller struct{}
 
 func (_ _Controller) GroupName() string {
-	return "hfunc"
+	return "hikit"
 }
 
 type logger struct{}
 
-func (l logger) Info(ctx hfctx.Ctx, msg string, keyAndValues ...interface{}) {
-	hflog.Info(ctx, msg, keyAndValues...)
+func (l logger) Info(ctx hkctx.Ctx, msg string, keyAndValues ...interface{}) {
+	hklog.Info(ctx, msg, keyAndValues...)
 }
 
 func (_ _Controller) Middlewares() (prefix, suffix []gin.HandlerFunc) {
 	return []gin.HandlerFunc{
-			hfgin.Tracer("trace_id"),
-			hfgin.Logger(logger{}),
-			hfgin.Paramer(logger{}),
+			hkgin.Tracer("trace_id"),
+			hkgin.Logger(logger{}),
+			hkgin.Paramer(logger{}),
 			func(c *gin.Context) {
-				hflog.Info(c, "global prefix")
+				hklog.Info(c, "global prefix")
 				c.Next()
 			},
 		}, []gin.HandlerFunc{
 			func(c *gin.Context) {
-				hflog.Info(c, "global subfix")
+				hklog.Info(c, "global subfix")
 				c.Next()
 			},
 		}
@@ -72,7 +72,7 @@ type GetUserByIdResp struct {
 // @Produce json
 // @Param query query GetUserByIdParams true " "
 // @Success 200 {object} GetUserByIdResp
-// @Router /v1/hfunc/user/:id [Get]
+// @Router /v1/hikit/user/:id [Get]
 // @Security ApiKeyAuth
 func (a _Controller) GetUserById() (version string, handlers []gin.HandlerFunc) {
 	return "v1", []gin.HandlerFunc{
@@ -88,8 +88,8 @@ func (a _Controller) GetUserById() (version string, handlers []gin.HandlerFunc) 
 				return
 			}
 			id := c.Param("id")
-			hflog.Info(c, "GetUserById", zap.String("id", id))
-			hfgin.Ok(c, resp)
+			hklog.Info(c, "GetUserById", zap.String("id", id))
+			hkgin.Ok(c, resp)
 		},
 	}
 }
@@ -109,7 +109,7 @@ type PostUserByIdResp struct {
 // @Produce json
 // @Param query query PostUserByIdParams true " "
 // @Success 200 {object} PostUserByIdResp
-// @Router /v1/hfunc/user/:id [Post]
+// @Router /v1/hikit/user/:id [Post]
 // @Security ApiKeyAuth
 func (a _Controller) PostUserById() (version string, handlers []gin.HandlerFunc) {
 	return "v1", []gin.HandlerFunc{
@@ -124,10 +124,10 @@ func (a _Controller) PostUserById() (version string, handlers []gin.HandlerFunc)
 
 				return
 			}
-			hfgin.Ok(c, resp)
+			hkgin.Ok(c, resp)
 		},
 		func(c *gin.Context) {
-			hflog.Info(c, "subfix")
+			hklog.Info(c, "subfix")
 			c.Next()
 		},
 	}
@@ -148,7 +148,7 @@ type PutUserByIdResp struct {
 // @Produce json
 // @Param query query PutUserByIdParams true " "
 // @Success 200 {object} PutUserByIdResp
-// @Router /v1/hfunc/user/:id [Put]
+// @Router /v1/hikit/user/:id [Put]
 // @Security ApiKeyAuth
 func (c _Controller) PutUserById() (version string, handlers []gin.HandlerFunc) {
 	return "v1", []gin.HandlerFunc{
@@ -163,10 +163,10 @@ func (c _Controller) PutUserById() (version string, handlers []gin.HandlerFunc) 
 
 				return
 			}
-			hfgin.Ok(c, resp)
+			hkgin.Ok(c, resp)
 		},
 		func(c *gin.Context) {
-			hflog.Info(c, "subfix")
+			hklog.Info(c, "subfix")
 			c.Next()
 		},
 	}
@@ -187,7 +187,7 @@ type DeleteUserByIdResp struct {
 // @Produce json
 // @Param body body DeleteUserByIdParams true " "
 // @Success 200 {object} DeleteUserByIdResp
-// @Router /v1/hfunc/user/:id [Delete]
+// @Router /v1/hikit/user/:id [Delete]
 // @Security ApiKeyAuth
 func (c _Controller) DeleteUserById() (version string, handlers []gin.HandlerFunc) {
 	return "v1", []gin.HandlerFunc{
@@ -202,7 +202,7 @@ func (c _Controller) DeleteUserById() (version string, handlers []gin.HandlerFun
 
 				return
 			}
-			hfgin.Ok(c, resp)
+			hkgin.Ok(c, resp)
 		},
 	}
 }
@@ -222,7 +222,7 @@ type PatchUserByIdResp struct {
 // @Produce json
 // @Param body body PatchUserByIdParams true " "
 // @Success 200 {object} PatchUserByIdResp
-// @Router /v1/hfunc/user/:id [Patch]
+// @Router /v1/hikit/user/:id [Patch]
 // @Security ApiKeyAuth
 func (c _Controller) PatchUserById() (version string, handlers []gin.HandlerFunc) {
 	return "v1", []gin.HandlerFunc{
@@ -237,7 +237,7 @@ func (c _Controller) PatchUserById() (version string, handlers []gin.HandlerFunc
 
 				return
 			}
-			hfgin.Ok(c, resp)
+			hkgin.Ok(c, resp)
 		},
 	}
 }
@@ -257,7 +257,7 @@ type PostUserByIdNameResp struct {
 // @Produce json
 // @Param body body PostUserByIdNameParams true " "
 // @Success 200 {object} PostUserByIdNameResp
-// @Router /v1/hfunc/user/:id/name [Post]
+// @Router /v1/hikit/user/:id/name [Post]
 // @Security ApiKeyAuth
 func (c _Controller) PostUserByIdName() (version string, handlers []gin.HandlerFunc) {
 	return "v`", []gin.HandlerFunc{
@@ -272,7 +272,7 @@ func (c _Controller) PostUserByIdName() (version string, handlers []gin.HandlerF
 
 				return
 			}
-			hfgin.Ok(c, resp)
+			hkgin.Ok(c, resp)
 		},
 	}
 }
@@ -292,7 +292,7 @@ type GetUserListResp struct {
 // @Produce json
 // @Param query query GetUserListParams true " "
 // @Success 200 {object} GetUserListResp
-// @Router /v1/hfunc/user/list [Get]
+// @Router /v1/hikit/user/list [Get]
 // @Security ApiKeyAuth
 func (c _Controller) GetUserList() (version string, handlers []gin.HandlerFunc) {
 	return "v1", []gin.HandlerFunc{
@@ -307,7 +307,7 @@ func (c _Controller) GetUserList() (version string, handlers []gin.HandlerFunc) 
 
 				return
 			}
-			hfgin.Ok(c, resp)
+			hkgin.Ok(c, resp)
 		},
 	}
 }
@@ -316,18 +316,18 @@ func main() {
 	r := gin.New()
 	i := r.Group("/", gin.Recovery())
 	i.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-	hfgin.RegisterController(i, &_Controller{})
+	hkgin.RegisterController(i, &_Controller{})
 	r.Run(":8081")
 }
 ```
 result:
 ```
-[GIN-debug] DELETE /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
-[GIN-debug] GET    /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
-[GIN-debug] GET    /v1/hfunc/user/list       --> main._Controller.Middlewares.func2 (7 handlers)
-[GIN-debug] PATCH  /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
-[GIN-debug] POST   /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
-[GIN-debug] POST   /v1/hfunc/user/:id/name   --> main._Controller.Middlewares.func2 (7 handlers)
-[GIN-debug] PUT    /v1/hfunc/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] DELETE /v1/hikit/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] GET    /v1/hikit/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] GET    /v1/hikit/user/list       --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] PATCH  /v1/hikit/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] POST   /v1/hikit/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] POST   /v1/hikit/user/:id/name   --> main._Controller.Middlewares.func2 (7 handlers)
+[GIN-debug] PUT    /v1/hikit/user/:id        --> main._Controller.Middlewares.func2 (7 handlers)
 ```
 swagger doc: http://127.0.0.1:8080/swagger/index.html

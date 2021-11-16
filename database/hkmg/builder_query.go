@@ -1,4 +1,4 @@
-package hkmongo
+package hkmg
 
 var QueryOp = queryOp{
 	//Limit:      "limit",
