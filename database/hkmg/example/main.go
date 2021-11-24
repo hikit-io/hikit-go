@@ -26,7 +26,10 @@ func init() {
 	o := options.Client()
 	o.ApplyURI(url)
 	cli, _ := mongo.NewClient(o)
-	cli.Connect(ctx)
+	err := cli.Connect(ctx)
+	if err != nil {
+		panic(err)
+	}
 	db = hkmg.NewDB(cli, "test")
 	//col = db.Collection("test")
 
@@ -63,7 +66,7 @@ func main() {
 	})
 	ts := []TestAge{}
 
-	err := db.Col("test").HFind(ctx, builder, &ts)
+	err := db.Col(User{}).HFind(ctx, builder, &ts)
 	if err.Err() != nil {
 		panic(err)
 	}
@@ -73,19 +76,19 @@ func main() {
 		Age: 11,
 	}
 
-	findRes := db.Col("test").HFind(ctx, querySturct, &ts)
+	findRes := db.Col(User{}).HFind(ctx, querySturct, &ts)
 	if findRes.Err() != nil {
 		panic(err)
 	}
 	fmt.Println(ts)
 
-	findOneRes := db.Col("test").HFindOne(ctx, builder, querySturct)
+	findOneRes := db.Col(User{}).HFindOne(ctx, builder, querySturct)
 	if findOneRes.Err() != nil {
 		panic(err)
 	}
 	fmt.Println(querySturct)
 
-	r := db.Col("test").HUpdateOne(ctx, builder, querySturct)
+	r := db.Col(User{}).HUpdateOne(ctx, builder, querySturct)
 	if r.Err() != nil {
 		panic(r.Error())
 	}

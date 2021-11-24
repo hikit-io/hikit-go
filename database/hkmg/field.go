@@ -24,7 +24,7 @@ type E struct {
 type D []E
 
 type Field struct {
-	chs  map[FieldName]*Field
+	chs  []*Field
 	name FieldName
 	val  D
 }
@@ -56,12 +56,21 @@ func (f *Field) op(opName OpName, opType OpType, val Any) *Field {
 
 func (f *Field) Child(name string) *Field {
 	if f.chs == nil {
-		f.chs = map[FieldName]*Field{}
+		f.chs = []*Field{}
 	}
-	if f.chs[name] == nil {
-		f.chs[name] = &Field{
-			name: name,
+	for _i, ch := range f.chs {
+		if ch.name == name {
+			return f.chs[_i]
 		}
 	}
-	return f.chs[name]
+	field := &Field{
+		name: name,
+	}
+	//if f.chs[name] == nil {
+	//	field = &Field{
+	//		name: name,
+	//	}
+	//}
+	f.chs = append(f.chs, field)
+	return field
 }

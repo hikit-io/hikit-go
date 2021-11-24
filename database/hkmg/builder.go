@@ -27,14 +27,14 @@ func (b *Builder) Free() {
 }
 
 type Builder struct {
-	fields        map[string]*Field
-	logicFields   map[string][]bson.D
+	fields        []*Field
+	logicFields   map[OpName][]bson.D
 	findOptions   *options.FindOptions
 	updateOptions *options.UpdateOptions
 }
 
 func (b *Builder) Reset() *Builder {
-	b.fields = map[string]*Field{}
+	b.fields = []*Field{}
 	b.findOptions = &options.FindOptions{}
 	b.updateOptions = &options.UpdateOptions{}
 	b.logicFields = map[string][]bson.D{}
@@ -67,7 +67,7 @@ func (b *Builder) BypassDocumentValidation(enable bool) *Builder {
 
 func (b *Builder) init() {
 	if b.fields == nil {
-		b.fields = map[string]*Field{}
+		b.fields = []*Field{}
 	}
 	if b.findOptions == nil {
 		b.findOptions = options.Find()
@@ -82,18 +82,29 @@ func (b *Builder) init() {
 
 func (b *Builder) Field(name string) *Field {
 	b.init()
-	if b.fields[name] == nil {
-		field := &Field{
-			map[FieldName]*Field{},
-			name,
-			D{},
+	for i, field := range b.fields {
+		if field.name == name {
+			return b.fields[i]
 		}
-		b.fields[name] = field
 	}
-	return b.fields[name]
+	field := &Field{
+		[]*Field{},
+		name,
+		D{},
+	}
+	b.fields = append(b.fields, field)
+	//if b.fields[name] == nil {
+	//	field := &Field{
+	//		map[FieldName]*Field{},
+	//		name,
+	//		D{},
+	//	}
+	//	b.fields[name] = field
+	//}
+	return field
 }
 
-func mergeFindField(prefix string, fields map[string]*Field) bson.D {
+func mergeFindField(prefix string, fields []*Field) bson.D {
 	all := bson.D{}
 	for _, filed := range fields {
 		bsonD := bson.D{}
@@ -161,7 +172,7 @@ func (b *Builder) Filter() bson.D {
 	//return all
 }
 
-func mergeUpField(prefix string, fields map[string]*Field) map[OpName]bson.D {
+func mergeUpField(prefix string, fields []*Field) map[OpName]bson.D {
 	opMap := map[OpName]bson.D{}
 
 	for _, filed := range fields {
