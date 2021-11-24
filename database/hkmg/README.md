@@ -1,4 +1,6 @@
-# hfmongo
+# hkmg
+
+For MongoDB
 
 ## Features
 
@@ -19,7 +21,7 @@ package main
 
 import (
 	"context"
-	"github.com/hfunc/hfunc-go/hfdatabase/hfmongo"
+	"go.hikit.io/database/hkmg"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -27,7 +29,7 @@ func main() {
 	ctx := context.Background()
 	db, _ := mongo.NewClient()
 	col := db.Collection("test")
-	builder := hfmongo.NewBuilder()
+	builder := hkmg.NewBuilder()
 	builder.Field("name").Equal("nekilc")
 	buidler.Field("age").LessThan(100)
 	builder.Skip(0).Limit(2)
@@ -53,7 +55,7 @@ package main
 
 import (
 	"context"
-	"github.com/hfunc/hfunc-go/hfdatabase/hfmongo"
+	"go.hikit.io/database/hkmg"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -65,7 +67,7 @@ type Test struct {
 func main() {
 	ctx := context.Background()
 	cli, _ := mongo.NewClient()
-	db := hfmongo.NewDB(cli,"test")
+	db := hkmg.NewDB(cli,"test")
 	res := &Test{Name:"nekilc"}
 	col := db.Col(res)
 	findOneRes := col.HFindOne(ctx,res,res)
@@ -77,7 +79,7 @@ func main() {
     }
 	// Or
 	ress := &[]Test{}
-	bd := hfmongo.NewBuilder()
+	bd := hkmg.NewBuilder()
 	bd.Field("name").Equal("nekilc")
 	bd.Limit(2)
 	findRes := col.HFind(ctx,bd,ress)
@@ -99,28 +101,28 @@ func main() {
 package main
 
 import (
-	"github.com/hfunc/hfunc-go/hfdatabase/hfmongo"
+	"go.hikit.io/database/hkmg"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func main() {
 	db, _ := mongo.NewClient()
 	col := db.Collection("test")
-	builder := hfmongo.NewBuilder()
+	builder := hkmg.NewBuilder()
 	// ------- Logic Start---------
-	orBd := hfmongo.NewBuilder()
+	orBd := hkmg.NewBuilder()
 	orBd.Field("age").Equal(11)
 	orBd.Field("name").Equal("hfunc")
-	orBd2 := hfmongo.NewBuilder()
+	orBd2 := hkmg.NewBuilder()
 	orBd2.Field("name").Equal("hfunc1")
 	// At the same level
 	builder.Or(orBd).Or(orBd2)
 	// At the different level
 	builder.Or(orBd.Or(orBd2))
 	// ------- Logic End---------
-	buidler.Field("age").LessThan(100)
+	builder.Field("age").LessThan(100)
 	col.Find(builder.Filter())
-	buidler.Field("age").Set(200)
+	builder.Field("age").Set(200)
 	col.Update(builder.Filter(),builder.Update())
 }
 ```
