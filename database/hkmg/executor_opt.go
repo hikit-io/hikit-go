@@ -103,6 +103,11 @@ func (c *Executor) Skip(i int64) *Executor {
 	return c
 }
 
+func (c *Executor) Page(size, num int64) *Executor {
+	c.Limit(size).Skip((num - 1) * size)
+	return c
+}
+
 func (c *Executor) Upsert(enable bool) *Executor {
 	c.SetUpsert(enable)
 	return c

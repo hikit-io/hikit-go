@@ -2,19 +2,22 @@ package hkmg
 
 import (
 	"context"
+	"reflect"
+
 	. "go.hikit.io/hktypes"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"reflect"
 )
 
 type TableName = string
 
 type TableNameFormat func(name string) string
+type FieldNameFormat func(name string) string
 
 type Options struct {
-	tableNameFc func(s string) string
+	tableNameFc TableNameFormat
+	fieldNameFc FieldNameFormat
 }
 
 type Database struct {

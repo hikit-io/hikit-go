@@ -44,6 +44,8 @@ type (
 	Ui64 = uint64
 	Ui   = uint
 
+	MustKV = Any
+
 	MustPtr = Any
 
 	MustStruct      = Any
