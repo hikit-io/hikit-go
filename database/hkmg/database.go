@@ -70,11 +70,16 @@ func (c *Database) Col(model Any) *Executor {
 	}
 }
 
-func NewDB(client *mongo.Client, dbname string) *Database {
+func NewDB(client *mongo.Client, dbname string, opts ...Option) *Database {
+	opt := &Options{}
+	for _, o := range opts {
+		o.apply(opt)
+	}
 	db := &Database{
-		dbname: dbname,
-		Client: client,
-		tables: map[TableName]*Collection{},
+		options: *opt,
+		dbname:  dbname,
+		Client:  client,
+		tables:  map[TableName]*Collection{},
 	}
 	tableNames, _ := db.DB().ListCollectionNames(context.Background(), bson.D{})
 	for _, name := range tableNames {
