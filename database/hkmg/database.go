@@ -65,6 +65,7 @@ func (c *Database) Col(model Any) *Executor {
 	}
 	return &Executor{
 		parent:        col,
+		opt:           &c.options,
 		FindOptions:   options.Find(),
 		UpdateOptions: options.Update(),
 	}
