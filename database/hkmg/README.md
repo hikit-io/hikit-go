@@ -9,7 +9,7 @@ For MongoDB
 
 ## Getting start
 
-`go get github.com/hikit/hikit-go/hfdatabase/hfmongo`
+`go get go.hikit.io/database/hfmg`
 
 ### Usage
 
