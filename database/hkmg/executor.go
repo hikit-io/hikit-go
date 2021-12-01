@@ -16,6 +16,7 @@ type Executor struct {
 	parent *Collection
 	*options.FindOptions
 	*options.UpdateOptions
+	returnDocument *options.ReturnDocument
 }
 
 func (c *Executor) SetFindOptions(o options.FindOptions) *Executor {
@@ -161,7 +162,7 @@ func (c *Executor) HFindOneAndUpdate(ctx context.Context, condition, update Must
 
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc).parseVal(update, Update, c.opt.fieldNameFc).parseVal(updateRes, Projection, c.opt.fieldNameFc)
 	opt := options.MergeFindOneAndUpdateOptions(append(opts,
-		mergeOpts{builder.FindOpts(), builder.UpOpts()}.ToFindOneAndUpdateOptions(),
+		mergeOpts{f: builder.FindOpts(), u: builder.UpOpts()}.ToFindOneAndUpdateOptions(),
 		mergeOpts{f: c.FindOptions, u: c.UpdateOptions}.ToFindOneAndUpdateOptions(),
 	)...)
 	filter := builder.Filter()
@@ -210,8 +211,8 @@ func (c *Executor) HFindOneAndReplace(ctx context.Context, condition, replace Mu
 	}
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc).parseVal(res, Projection, c.opt.fieldNameFc)
 	opt := options.MergeFindOneAndReplaceOptions(append(opts,
-		mergeOpts{builder.FindOpts(), builder.UpOpts()}.ToFindOneAndReplaceOptions(),
-		mergeOpts{c.FindOptions, c.UpdateOptions}.ToFindOneAndReplaceOptions(),
+		mergeOpts{f: builder.FindOpts(), u: builder.UpOpts()}.ToFindOneAndReplaceOptions(),
+		mergeOpts{f: c.FindOptions, u: c.UpdateOptions}.ToFindOneAndReplaceOptions(),
 	)...)
 	filter := builder.Filter()
 	if c.opt.debug {
@@ -298,10 +299,18 @@ const (
 	Find parseType = iota + 1
 	Update
 	Projection
+	Sort
 )
 
 func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Builder {
 	switch inst := val.(type) {
+	case map[string]SortType:
+		for field, value := range inst {
+			switch pt {
+			case Sort:
+				b.Field(field).Sort(value)
+			}
+		}
 	case map[string]interface{}:
 		for field, value := range inst {
 			switch pt {
@@ -311,6 +320,8 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 				b.Field(field).Set(value)
 			case Projection:
 				b.Field(field).Projection(true)
+			case Sort:
+				b.Field(field).Sort(value.(SortType))
 			}
 		}
 	case map[string]string:
@@ -333,6 +344,8 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 				b.Field(field).Set(value)
 			case Projection:
 				b.Field(field).Projection(true)
+			case Sort:
+				b.Field(field).Sort(SortType(value))
 			}
 		}
 	case map[string]int8:
@@ -344,6 +357,8 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 				b.Field(field).Set(value)
 			case Projection:
 				b.Field(field).Projection(true)
+			case Sort:
+				b.Field(field).Sort(SortType(value))
 			}
 		}
 	case map[string]int16:
@@ -355,6 +370,8 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 				b.Field(field).Set(value)
 			case Projection:
 				b.Field(field).Projection(true)
+			case Sort:
+				b.Field(field).Sort(SortType(value))
 			}
 		}
 	case map[string]int32:
@@ -366,6 +383,8 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 				b.Field(field).Set(value)
 			case Projection:
 				b.Field(field).Projection(true)
+			case Sort:
+				b.Field(field).Sort(SortType(value))
 			}
 		}
 	case map[string]int64:
@@ -377,6 +396,8 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 				b.Field(field).Set(value)
 			case Projection:
 				b.Field(field).Projection(true)
+			case Sort:
+				b.Field(field).Sort(SortType(value))
 			}
 		}
 	case map[string]uint:
@@ -388,6 +409,8 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 				b.Field(field).Set(value)
 			case Projection:
 				b.Field(field).Projection(true)
+			case Sort:
+				b.Field(field).Sort(SortType(value))
 			}
 		}
 	case map[string]uint8:
@@ -399,6 +422,8 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 				b.Field(field).Set(value)
 			case Projection:
 				b.Field(field).Projection(true)
+			case Sort:
+				b.Field(field).Sort(SortType(value))
 			}
 		}
 	case map[string]uint16:
@@ -410,6 +435,8 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 				b.Field(field).Set(value)
 			case Projection:
 				b.Field(field).Projection(true)
+			case Sort:
+				b.Field(field).Sort(SortType(value))
 			}
 		}
 	case map[string]uint32:
@@ -421,6 +448,8 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 				b.Field(field).Set(value)
 			case Projection:
 				b.Field(field).Projection(true)
+			case Sort:
+				b.Field(field).Sort(SortType(value))
 			}
 		}
 	case map[string]uint64:
@@ -432,6 +461,8 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 				b.Field(field).Set(value)
 			case Projection:
 				b.Field(field).Projection(true)
+			case Sort:
+				b.Field(field).Sort(SortType(value))
 			}
 		}
 	case *Builder:
@@ -464,6 +495,8 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 						b.Field(v).Set(rfv.FieldByName(rft.Field(i).Name).Interface())
 					case Projection:
 						b.Field(v).Projection(true)
+					case Sort:
+						b.Field(v).Sort(rfv.FieldByName(rft.Field(i).Name).Interface().(SortType))
 					}
 					continue
 				}
@@ -485,6 +518,12 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 						b.Field(format(rft.Field(i).Name)).Projection(true)
 					} else {
 						b.Field(rft.Field(i).Name).Projection(true)
+					}
+				case Sort:
+					if format != nil {
+						b.Field(format(rft.Field(i).Name)).Sort(rfv.FieldByName(rft.Field(i).Name).Interface().(SortType))
+					} else {
+						b.Field(rft.Field(i).Name).Sort(rfv.FieldByName(rft.Field(i).Name).Interface().(SortType))
 					}
 				}
 			}

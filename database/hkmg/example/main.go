@@ -73,7 +73,7 @@ func main() {
 	}
 	fmt.Println(ts)
 
-	err = db.Col(User{}).HFind(ctx, hkmg.Or(User{Name: "nieaowei"}, User{Age: 32}), &ts)
+	err = db.Col(User{}).Sort(map[string]hkmg.SortType{"age": hkmg.SortDesc}).HFind(ctx, hkmg.Or(User{Name: "nieaowei"}, User{Age: 32}), &ts)
 	if err.Err() != nil {
 		panic(err)
 	}

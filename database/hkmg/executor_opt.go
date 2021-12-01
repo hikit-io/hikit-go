@@ -1,10 +1,14 @@
 package hkmg
 
-import "go.mongodb.org/mongo-driver/mongo/options"
+import (
+	"go.hikit.io/hktypes"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
 
 type mergeOpts struct {
-	f *options.FindOptions
-	u *options.UpdateOptions
+	f              *options.FindOptions
+	u              *options.UpdateOptions
+	returnDocument *options.ReturnDocument
 }
 
 func (m mergeOpts) ToFindOneAndUpdateOptions() *options.FindOneAndUpdateOptions {
@@ -14,10 +18,10 @@ func (m mergeOpts) ToFindOneAndUpdateOptions() *options.FindOneAndUpdateOptions 
 		Collation:                m.u.Collation,
 		MaxTime:                  m.f.MaxTime,
 		Projection:               m.f.Projection,
-		//ReturnDocument:    todo       ,
-		Sort:   m.f.Sort,
-		Upsert: m.u.Upsert,
-		Hint:   m.f.Hint,
+		ReturnDocument:           m.returnDocument,
+		Sort:                     m.f.Sort,
+		Upsert:                   m.u.Upsert,
+		Hint:                     m.f.Hint,
 	}
 }
 
@@ -27,10 +31,10 @@ func (m mergeOpts) ToFindOneAndReplaceOptions() *options.FindOneAndReplaceOption
 		Collation:                m.u.Collation,
 		MaxTime:                  m.f.MaxTime,
 		Projection:               m.f.Projection,
-		//ReturnDocument:    todo       ,
-		Sort:   m.f.Sort,
-		Upsert: m.u.Upsert,
-		Hint:   m.f.Hint,
+		ReturnDocument:           m.returnDocument,
+		Sort:                     m.f.Sort,
+		Upsert:                   m.u.Upsert,
+		Hint:                     m.f.Hint,
 	}
 }
 
@@ -125,5 +129,23 @@ func (c *Executor) BatchSize(i int32) *Executor {
 
 func (c *Executor) BypassDocumentValidation(enable bool) *Executor {
 	c.SetBypassDocumentValidation(enable)
+	return c
+}
+
+func (c *Executor) Sort(sort hktypes.MustKV) *Executor {
+	builder := NewBuilder().parseVal(sort, Sort, c.opt.fieldNameFc)
+	c.SetSort(builder.FindOpts().Sort)
+	return c
+}
+
+type ReturnDocType = options.ReturnDocument
+
+const (
+	Before ReturnDocType = options.Before
+	After  ReturnDocType = options.After
+)
+
+func (c *Executor) ReturnDoc(t ReturnDocType) *Executor {
+	c.returnDocument = &t
 	return c
 }
