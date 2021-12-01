@@ -3,9 +3,12 @@ package hkmg
 import (
 	"context"
 	"reflect"
+	"time"
 
+	"go.hikit.io/hklog"
 	. "go.hikit.io/hktypes"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.uber.org/zap"
 )
 
 type Executor struct {
@@ -15,12 +18,45 @@ type Executor struct {
 	*options.UpdateOptions
 }
 
+func (c *Executor) SetFindOptions(o options.FindOptions) *Executor {
+	c.FindOptions = &o
+	return c
+}
+func (c *Executor) SetUpdateOptions(o options.UpdateOptions) *Executor {
+	c.UpdateOptions = &o
+	return c
+}
+
 func (c *Executor) HInsertOne(ctx context.Context, doc MustKV, opts ...*options.InsertOneOptions) *InsertOneResult {
+	var (
+		startTs int64
+		endTs   int64
+	)
 	r, e := c.parent.InsertOne(ctx, doc, opts...)
+	if c.opt.debug {
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.Any("options", opts),
+			)
+		}()
+	}
 	return &InsertOneResult{err{e}, r}
 }
 
 func (c *Executor) HInsertMany(ctx context.Context, docs MustKV, opts ...*options.InsertManyOptions) *InsertManyResult {
+	var (
+		startTs  int64
+		endTs    int64
+		parseTs  int64
+		accessTs int64
+	)
+
+	if c.opt.debug {
+		startTs = time.Now().UnixNano()
+	}
 	var idocs Anys
 	switch i := docs.(type) {
 	case []interface{}:
@@ -28,17 +64,79 @@ func (c *Executor) HInsertMany(ctx context.Context, docs MustKV, opts ...*option
 	default:
 		idocs = AnyToSliceAny(docs)
 	}
+	parseTs = time.Now().UnixNano()
 	r, e := c.parent.InsertMany(ctx, idocs, opts...)
+	if c.opt.debug {
+		accessTs = time.Now().UnixNano()
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
+				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
+				zap.Any("options", opts),
+			)
+		}()
+	}
 	return &InsertManyResult{err{e}, r}
 }
 
-func (c *Executor) HFindOne(ctx context.Context, val MustKV, res MustPtr, opts ...*options.FindOneOptions) *SingleResult {
-	builder := NewBuilder().parseVal(val, Find, c.opt.fieldNameFc)
+type OrFc func(format FieldNameFormat) *Builder
+
+func Or(vals ...MustKV) OrFc {
+	return func(format FieldNameFormat) *Builder {
+		builder := NewBuilder()
+		for _, val := range vals {
+			b := NewBuilder()
+			builder.Or(b.parseVal(val, Find, format))
+			b.Free()
+		}
+		return builder
+	}
+}
+
+func (c *Executor) HFindOne(ctx context.Context, cond MustKV, res MustPtr, opts ...*options.FindOneOptions) *SingleResult {
+	var (
+		startTs  int64
+		endTs    int64
+		parseTs  int64
+		accessTs int64
+	)
+
+	if c.opt.debug {
+		startTs = time.Now().UnixNano()
+	}
+	if orfc, ok := cond.(OrFc); ok {
+		cond = orfc(c.opt.fieldNameFc)
+	}
+	builder := NewBuilder().parseVal(cond, Find, c.opt.fieldNameFc).parseVal(res, Projection, c.opt.fieldNameFc)
 	opt := options.MergeFindOneOptions(append(opts,
 		mergeOpts{f: builder.FindOpts()}.ToFindOneOptions(),
 		mergeOpts{f: c.FindOptions}.ToFindOneOptions(),
 	)...)
-	r := c.parent.FindOne(ctx, builder.Filter(), opt)
+	filter := builder.Filter()
+	if c.opt.debug {
+		parseTs = time.Now().UnixNano()
+	}
+	r := c.parent.FindOne(ctx, filter, opt)
+	if c.opt.debug {
+		accessTs = time.Now().UnixNano()
+	}
+	if c.opt.debug {
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
+				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
+				zap.Any("statement", DebugD(filter)),
+				zap.Any("options", opt),
+			)
+		}()
+	}
+
 	if r.Err() != nil {
 		return &SingleResult{
 			err{r.Err()},
@@ -50,15 +148,45 @@ func (c *Executor) HFindOne(ctx context.Context, val MustKV, res MustPtr, opts .
 }
 
 func (c *Executor) HFindOneAndUpdate(ctx context.Context, condition, update MustKV, updateRes MustPtr, opts ...*options.FindOneAndUpdateOptions) *SingleResult {
+	var (
+		startTs  int64
+		endTs    int64
+		parseTs  int64
+		accessTs int64
+	)
+
+	if c.opt.debug {
+		startTs = time.Now().UnixNano()
+	}
+
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc).parseVal(update, Update, c.opt.fieldNameFc).parseVal(updateRes, Projection, c.opt.fieldNameFc)
 	opt := options.MergeFindOneAndUpdateOptions(append(opts,
 		mergeOpts{builder.FindOpts(), builder.UpOpts()}.ToFindOneAndUpdateOptions(),
 		mergeOpts{f: c.FindOptions, u: c.UpdateOptions}.ToFindOneAndUpdateOptions(),
 	)...)
+	filter := builder.Filter()
+	up := builder.Update()
+	if c.opt.debug {
+		parseTs = time.Now().UnixNano()
+	}
 	r := c.parent.FindOneAndUpdate(ctx,
-		builder.Filter(), builder.Update(),
+		filter, up,
 		opt,
 	)
+	if c.opt.debug {
+		accessTs = time.Now().UnixNano()
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
+				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
+				zap.Any("statement", DebugD(filter)),
+				zap.Any("options", opt),
+			)
+		}()
+	}
 	if r.Err() != nil {
 		return &SingleResult{
 			err: err{r.Err()},
@@ -70,15 +198,42 @@ func (c *Executor) HFindOneAndUpdate(ctx context.Context, condition, update Must
 }
 
 func (c *Executor) HFindOneAndReplace(ctx context.Context, condition, replace MustKV, res MustPtr, opts ...*options.FindOneAndReplaceOptions) *SingleResult {
+	var (
+		startTs  int64
+		endTs    int64
+		parseTs  int64
+		accessTs int64
+	)
+
+	if c.opt.debug {
+		startTs = time.Now().UnixNano()
+	}
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc).parseVal(res, Projection, c.opt.fieldNameFc)
 	opt := options.MergeFindOneAndReplaceOptions(append(opts,
 		mergeOpts{builder.FindOpts(), builder.UpOpts()}.ToFindOneAndReplaceOptions(),
 		mergeOpts{c.FindOptions, c.UpdateOptions}.ToFindOneAndReplaceOptions(),
 	)...)
-
+	filter := builder.Filter()
+	if c.opt.debug {
+		parseTs = time.Now().UnixNano()
+	}
 	r := c.parent.FindOneAndReplace(ctx,
-		builder.Filter(), replace,
+		filter, replace,
 		opt)
+	if c.opt.debug {
+		accessTs = time.Now().UnixNano()
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
+				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
+				zap.Any("statement", DebugD(filter)),
+				zap.Any("options", opt),
+			)
+		}()
+	}
 	if r.Err() != nil {
 		return &SingleResult{
 			err: err{r.Err()},
@@ -90,15 +245,43 @@ func (c *Executor) HFindOneAndReplace(ctx context.Context, condition, replace Mu
 }
 
 func (c *Executor) HFindOneAndDelete(ctx context.Context, condition MustKV, deleteRes MustPtr, opts ...*options.FindOneAndDeleteOptions) *SingleResult {
+	var (
+		startTs  int64
+		endTs    int64
+		parseTs  int64
+		accessTs int64
+	)
+
+	if c.opt.debug {
+		startTs = time.Now().UnixNano()
+	}
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc).parseVal(deleteRes, Projection, c.opt.fieldNameFc)
 	opt := options.MergeFindOneAndDeleteOptions(append(opts,
 		mergeOpts{f: builder.FindOpts()}.ToFindOneAndDeleteOptions(),
 		mergeOpts{f: c.FindOptions}.ToFindOneAndDeleteOptions(),
 	)...)
+	filter := builder.Filter()
+	if c.opt.debug {
+		parseTs = time.Now().UnixNano()
+	}
 	r := c.parent.FindOneAndDelete(ctx,
-		builder.Filter(),
+		filter,
 		opt,
 	)
+	if c.opt.debug {
+		accessTs = time.Now().UnixNano()
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
+				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
+				zap.Any("statement", DebugD(filter)),
+				zap.Any("options", opt),
+			)
+		}()
+	}
 	if r.Err() != nil {
 		return &SingleResult{
 			err: err{r.Err()},
@@ -311,13 +494,44 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 }
 
 func (c *Executor) HFind(ctx context.Context, condition MustKV, res MustSlicePtr, opts ...*options.FindOptions) *FindResult {
+	var (
+		startTs  int64
+		endTs    int64
+		parseTs  int64
+		accessTs int64
+	)
+
+	if c.opt.debug {
+		startTs = time.Now().UnixNano()
+	}
+	if orfc, ok := condition.(OrFc); ok {
+		condition = orfc(c.opt.fieldNameFc)
+	}
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc).parseVal(res, Projection, c.opt.fieldNameFc)
 	opt := options.MergeFindOptions(append(opts,
 		builder.FindOpts(),
 		c.FindOptions,
 	)...)
-
+	filter := builder.Filter()
+	if c.opt.debug {
+		parseTs = time.Now().UnixNano()
+	}
 	cur, e := c.parent.Find(ctx, builder.Filter(), opt)
+	if c.opt.debug {
+		accessTs = time.Now().UnixNano()
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
+				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
+				zap.Any("statement", DebugD(filter)),
+				zap.Any("options", opt),
+			)
+		}()
+	}
+
 	if e != nil {
 		return &FindResult{
 			err{e},
@@ -327,13 +541,40 @@ func (c *Executor) HFind(ctx context.Context, condition MustKV, res MustSlicePtr
 }
 
 func (c *Executor) HUpdateOne(ctx context.Context, condition, update MustKV, opts ...*options.UpdateOptions) *UpdateResult {
+	var (
+		startTs  int64
+		endTs    int64
+		parseTs  int64
+		accessTs int64
+	)
+
+	if c.opt.debug {
+		startTs = time.Now().UnixNano()
+	}
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc).parseVal(update, Update, c.opt.fieldNameFc)
 	opt := options.MergeUpdateOptions(append(opts,
 		builder.UpOpts(),
 		c.UpdateOptions,
 	)...)
 
-	cur, e := c.parent.UpdateOne(ctx, builder.Filter(), builder.Update(), opt)
+	filter := builder.Filter()
+	up := builder.Update()
+
+	cur, e := c.parent.UpdateOne(ctx, filter, up, opt)
+	if c.opt.debug {
+		accessTs = time.Now().UnixNano()
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
+				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
+				zap.Any("statement", DebugD(filter)),
+				zap.Any("options", opt),
+			)
+		}()
+	}
 	return &UpdateResult{
 		err:          err{e},
 		UpdateResult: cur,
@@ -341,13 +582,41 @@ func (c *Executor) HUpdateOne(ctx context.Context, condition, update MustKV, opt
 }
 
 func (c *Executor) HUpdateMany(ctx context.Context, condition, update MustKV, opts ...*options.UpdateOptions) *UpdateResult {
+	var (
+		startTs  int64
+		endTs    int64
+		parseTs  int64
+		accessTs int64
+	)
+
+	if c.opt.debug {
+		startTs = time.Now().UnixNano()
+	}
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc).parseVal(update, Update, c.opt.fieldNameFc)
 	opt := options.MergeUpdateOptions(append(opts,
 		builder.UpOpts(),
 		c.UpdateOptions,
 	)...)
-
-	cur, e := c.parent.UpdateMany(ctx, builder.Filter(), builder.Update(), opt)
+	filter := builder.Filter()
+	up := builder.Update()
+	if c.opt.debug {
+		parseTs = time.Now().UnixNano()
+	}
+	cur, e := c.parent.UpdateMany(ctx, filter, up, opt)
+	if c.opt.debug {
+		accessTs = time.Now().UnixNano()
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
+				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
+				zap.Any("statement", DebugD(filter)),
+				zap.Any("options", opt),
+			)
+		}()
+	}
 	return &UpdateResult{
 		err:          err{e},
 		UpdateResult: cur,
@@ -355,12 +624,40 @@ func (c *Executor) HUpdateMany(ctx context.Context, condition, update MustKV, op
 }
 
 func (c *Executor) HCount(ctx context.Context, condition MustKV, opts ...*options.CountOptions) *CountResult {
+	var (
+		startTs  int64
+		endTs    int64
+		parseTs  int64
+		accessTs int64
+	)
+
+	if c.opt.debug {
+		startTs = time.Now().UnixNano()
+	}
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc)
 	opt := options.MergeCountOptions(append(opts,
 		mergeOpts{f: builder.FindOpts()}.ToCountOptions(),
 		mergeOpts{f: c.FindOptions}.ToCountOptions(),
 	)...)
-	count, e := c.parent.CountDocuments(ctx, builder.Filter(), opt)
+	filter := builder.Filter()
+	if c.opt.debug {
+		parseTs = time.Now().UnixNano()
+	}
+	count, e := c.parent.CountDocuments(ctx, filter, opt)
+	if c.opt.debug {
+		accessTs = time.Now().UnixNano()
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
+				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
+				zap.Any("statement", DebugD(filter)),
+				zap.Any("options", opt),
+			)
+		}()
+	}
 	return &CountResult{
 		err:   err{e},
 		Count: count,
@@ -368,12 +665,40 @@ func (c *Executor) HCount(ctx context.Context, condition MustKV, opts ...*option
 }
 
 func (c *Executor) HDeleteOne(ctx context.Context, condition MustKV, opts ...*options.DeleteOptions) *DeleteResult {
+	var (
+		startTs  int64
+		endTs    int64
+		parseTs  int64
+		accessTs int64
+	)
+
+	if c.opt.debug {
+		startTs = time.Now().UnixNano()
+	}
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc)
 	opt := options.MergeDeleteOptions(append(opts,
 		mergeOpts{f: builder.FindOpts()}.ToDeleteOptions(),
 		mergeOpts{f: c.FindOptions}.ToDeleteOptions(),
 	)...)
-	r, e := c.parent.DeleteOne(ctx, builder.Filter(), opt)
+	filter := builder.Filter()
+	if c.opt.debug {
+		parseTs = time.Now().UnixNano()
+	}
+	r, e := c.parent.DeleteOne(ctx, filter, opt)
+	if c.opt.debug {
+		accessTs = time.Now().UnixNano()
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
+				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
+				zap.Any("statement", DebugD(filter)),
+				zap.Any("options", opt),
+			)
+		}()
+	}
 	return &DeleteResult{
 		err:          err{e},
 		DeleteResult: r,
@@ -381,12 +706,41 @@ func (c *Executor) HDeleteOne(ctx context.Context, condition MustKV, opts ...*op
 }
 
 func (c *Executor) HDeleteMany(ctx context.Context, condition MustKV, opts ...*options.DeleteOptions) *DeleteResult {
+	var (
+		startTs  int64
+		endTs    int64
+		parseTs  int64
+		accessTs int64
+	)
+
+	if c.opt.debug {
+		startTs = time.Now().UnixNano()
+	}
+
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc)
 	opt := options.MergeDeleteOptions(append(opts,
 		mergeOpts{f: builder.FindOpts()}.ToDeleteOptions(),
 		mergeOpts{f: c.FindOptions}.ToDeleteOptions(),
 	)...)
-	r, e := c.parent.DeleteMany(ctx, builder.Filter(), opt)
+	filter := builder.Filter()
+	if c.opt.debug {
+		parseTs = time.Now().UnixNano()
+	}
+	r, e := c.parent.DeleteMany(ctx, filter, opt)
+	if c.opt.debug {
+		accessTs = time.Now().UnixNano()
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
+				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
+				zap.Any("statement", DebugD(filter)),
+				zap.Any("options", opt),
+			)
+		}()
+	}
 	return &DeleteResult{
 		err:          err{e},
 		DeleteResult: r,
@@ -394,12 +748,40 @@ func (c *Executor) HDeleteMany(ctx context.Context, condition MustKV, opts ...*o
 }
 
 func (c *Executor) HReplaceOne(ctx context.Context, condition, newDoc MustKV, opts ...*options.ReplaceOptions) *UpdateResult {
+	var (
+		startTs  int64
+		endTs    int64
+		parseTs  int64
+		accessTs int64
+	)
+
+	if c.opt.debug {
+		startTs = time.Now().UnixNano()
+	}
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc)
 	opt := options.MergeReplaceOptions(append(opts,
 		mergeOpts{f: builder.FindOpts(), u: builder.UpOpts()}.ToReplaceOptions(),
 		mergeOpts{f: c.FindOptions, u: c.UpdateOptions}.ToReplaceOptions(),
 	)...)
-	r, e := c.parent.ReplaceOne(ctx, builder.Filter(), newDoc, opt)
+	filter := builder.Filter()
+	if c.opt.debug {
+		parseTs = time.Now().UnixNano()
+	}
+	r, e := c.parent.ReplaceOne(ctx, filter, newDoc, opt)
+	if c.opt.debug {
+		accessTs = time.Now().UnixNano()
+		defer func() {
+			endTs = time.Now().UnixNano()
+			hklog.Debug(ctx, "",
+				zap.String("table", c.parent.name),
+				zap.String("costTime", time.Duration(endTs-startTs).String()),
+				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
+				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
+				zap.Any("statement", DebugD(filter)),
+				zap.Any("options", opt),
+			)
+		}()
+	}
 	return &UpdateResult{
 		err:          err{e},
 		UpdateResult: r,

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"go.hikit.io/database/hkmg"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -30,7 +31,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	db = hkmg.NewDB(cli, "test")
+	db = hkmg.NewDB(cli, "test", hkmg.WithDebug(true))
 	//col = db.Collection("test")
 
 }
@@ -62,11 +63,17 @@ func main() {
 	builder.OrFc(func(br *hkmg.Builder) {
 		br.Field("name").Equal("nieaowei")
 	}).OrFc(func(br *hkmg.Builder) {
-		br.Field("age").Equal(11)
+		br.Field("age").Equal(32)
 	})
 	ts := []TestAge{}
 
 	err := db.Col(User{}).HFind(ctx, builder, &ts)
+	if err.Err() != nil {
+		panic(err)
+	}
+	fmt.Println(ts)
+
+	err = db.Col(User{}).HFind(ctx, hkmg.Or(User{Name: "nieaowei"}, User{Age: 32}), &ts)
 	if err.Err() != nil {
 		panic(err)
 	}
