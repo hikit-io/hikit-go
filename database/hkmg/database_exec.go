@@ -28,7 +28,7 @@ type QueryFc func() (condition interface{}, table interface{})
 //		db.HInsertOne(ctx,func()(interface{},interface{}){
 //			return needTable{},"table"
 //		})
-func (c *Database) HInsertOne(ctx context.Context, doc Any, opts ...*options.InsertOneOptions) *InsertOneResult {
+func (c *DbExecutor) HInsertOne(ctx context.Context, doc Any, opts ...*options.InsertOneOptions) *InsertOneResult {
 	switch d := doc.(type) {
 	case Doc:
 		return c.Col(d.DocName()).HInsertOne(ctx, doc, opts...)
@@ -40,7 +40,7 @@ func (c *Database) HInsertOne(ctx context.Context, doc Any, opts ...*options.Ins
 	}
 }
 
-func (c *Database) HInsertMany(ctx context.Context, docs Any, opts ...*options.InsertManyOptions) *InsertManyResult {
+func (c *DbExecutor) HInsertMany(ctx context.Context, docs Any, opts ...*options.InsertManyOptions) *InsertManyResult {
 	switch d := docs.(type) {
 	case Doc:
 		return c.Col(d.DocName()).HInsertMany(ctx, docs, opts...)
@@ -52,134 +52,148 @@ func (c *Database) HInsertMany(ctx context.Context, docs Any, opts ...*options.I
 	}
 }
 
-func (c *Database) HFindOne(ctx context.Context, condition MustKV, result MustPtr, opts ...*options.FindOneOptions) *SingleResult {
-	switch d := condition.(type) {
-	case Doc:
-		return c.Col(d.DocName()).HFindOne(ctx, condition, result, opts...)
-	case QueryFc:
-		cond, table := d()
-		return c.Col(table).HFindOne(ctx, cond, result, opts...)
-	default:
-		return c.Col(result).HFindOne(ctx, condition, result, opts...)
+type DbExecutor struct {
+	f *options.FindOptions
+	u *options.UpdateOptions
+	*Database
+}
+
+func (c *Database) Exec() *DbExecutor {
+	return &DbExecutor{
+		f:        options.Find(),
+		u:        options.Update(),
+		Database: c,
 	}
 }
 
-func (c *Database) HFindOneAndUpdate(ctx context.Context, condition, update MustKV, updateRes MustPtr, opts ...*options.FindOneAndUpdateOptions) *SingleResult {
+func (c *DbExecutor) HFindOne(ctx context.Context, condition MustKV, result MustPtr, opts ...*options.FindOneOptions) *SingleResult {
 	switch d := condition.(type) {
 	case Doc:
-		return c.Col(d.DocName()).HFindOneAndUpdate(ctx, condition, update, updateRes, opts...)
+		return c.Col(d.DocName()).SetFindOptions(*c.f).HFindOne(ctx, condition, result, opts...)
 	case QueryFc:
 		cond, table := d()
-		return c.Col(table).HFindOneAndUpdate(ctx, cond, update, updateRes, opts...)
+		return c.Col(table).SetFindOptions(*c.f).HFindOne(ctx, cond, result, opts...)
 	default:
-		return c.Col(updateRes).HFindOneAndUpdate(ctx, condition, update, updateRes, opts...)
+		return c.Col(condition).SetFindOptions(*c.f).HFindOne(ctx, condition, result, opts...)
 	}
 }
 
-func (c *Database) HFindOneAndReplace(ctx context.Context, condition, replace MustKV, replaceRes MustPtr, opts ...*options.FindOneAndReplaceOptions) *SingleResult {
+func (c *DbExecutor) HFindOneAndUpdate(ctx context.Context, condition, update MustKV, updateRes MustPtr, opts ...*options.FindOneAndUpdateOptions) *SingleResult {
 	switch d := condition.(type) {
 	case Doc:
-		return c.Col(d.DocName()).HFindOneAndReplace(ctx, condition, replace, replaceRes, opts...)
+		return c.Col(d.DocName()).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HFindOneAndUpdate(ctx, condition, update, updateRes, opts...)
 	case QueryFc:
 		cond, table := d()
-		return c.Col(table).HFindOneAndReplace(ctx, cond, replace, replaceRes, opts...)
+		return c.Col(table).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HFindOneAndUpdate(ctx, cond, update, updateRes, opts...)
 	default:
-		return c.Col(replace).HFindOneAndReplace(ctx, condition, replace, replaceRes, opts...)
+		return c.Col(condition).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HFindOneAndUpdate(ctx, condition, update, updateRes, opts...)
 	}
 }
 
-func (c *Database) HFindOneAndDelete(ctx context.Context, condition MustKV, updateRes MustPtr, opts ...*options.FindOneAndDeleteOptions) *SingleResult {
+func (c *DbExecutor) HFindOneAndReplace(ctx context.Context, condition, replace MustKV, replaceRes MustPtr, opts ...*options.FindOneAndReplaceOptions) *SingleResult {
 	switch d := condition.(type) {
 	case Doc:
-		return c.Col(d.DocName()).HFindOneAndDelete(ctx, condition, updateRes, opts...)
+		return c.Col(d.DocName()).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HFindOneAndReplace(ctx, condition, replace, replaceRes, opts...)
 	case QueryFc:
 		cond, table := d()
-		return c.Col(table).HFindOneAndDelete(ctx, cond, updateRes, opts...)
+		return c.Col(table).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HFindOneAndReplace(ctx, cond, replace, replaceRes, opts...)
 	default:
-		return c.Col(condition).HFindOneAndDelete(ctx, condition, updateRes, opts...)
+		return c.Col(condition).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HFindOneAndReplace(ctx, condition, replace, replaceRes, opts...)
 	}
 }
 
-func (c *Database) HFind(ctx context.Context, condition MustKV, res MustSlicePtr, opts ...*options.FindOptions) *FindResult {
+func (c *DbExecutor) HFindOneAndDelete(ctx context.Context, condition MustKV, updateRes MustPtr, opts ...*options.FindOneAndDeleteOptions) *SingleResult {
 	switch d := condition.(type) {
 	case Doc:
-		return c.Col(d.DocName()).HFind(ctx, condition, res, opts...)
+		return c.Col(d.DocName()).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HFindOneAndDelete(ctx, condition, updateRes, opts...)
 	case QueryFc:
 		cond, table := d()
-		return c.Col(table).HFind(ctx, cond, res, opts...)
+		return c.Col(table).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HFindOneAndDelete(ctx, cond, updateRes, opts...)
 	default:
-		return c.Col(condition).HFind(ctx, condition, res, opts...)
+		return c.Col(condition).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HFindOneAndDelete(ctx, condition, updateRes, opts...)
 	}
 }
 
-func (c *Database) HUpdateOne(ctx context.Context, condition, update MustKV, opts ...*options.UpdateOptions) *UpdateResult {
+func (c *DbExecutor) HFind(ctx context.Context, condition MustKV, res MustSlicePtr, opts ...*options.FindOptions) *FindResult {
 	switch d := condition.(type) {
 	case Doc:
-		return c.Col(d.DocName()).HUpdateOne(ctx, condition, update, opts...)
+		return c.Col(d.DocName()).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HFind(ctx, condition, res, opts...)
 	case QueryFc:
 		cond, table := d()
-		return c.Col(table).HUpdateOne(ctx, cond, update, opts...)
+		return c.Col(table).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HFind(ctx, cond, res, opts...)
 	default:
-		return c.Col(condition).HUpdateOne(ctx, condition, update, opts...)
+		return c.Col(condition).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HFind(ctx, condition, res, opts...)
 	}
 }
 
-func (c *Database) HUpdateMany(ctx context.Context, condition, update MustKV, opts ...*options.UpdateOptions) *UpdateResult {
+func (c *DbExecutor) HUpdateOne(ctx context.Context, condition, update MustKV, opts ...*options.UpdateOptions) *UpdateResult {
 	switch d := condition.(type) {
 	case Doc:
-		return c.Col(d.DocName()).HUpdateMany(ctx, condition, update, opts...)
+		return c.Col(d.DocName()).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HUpdateOne(ctx, condition, update, opts...)
 	case QueryFc:
 		cond, table := d()
-		return c.Col(table).HUpdateMany(ctx, cond, update, opts...)
+		return c.Col(table).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HUpdateOne(ctx, cond, update, opts...)
 	default:
-		return c.Col(condition).HUpdateMany(ctx, condition, update, opts...)
+		return c.Col(condition).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HUpdateOne(ctx, condition, update, opts...)
 	}
 }
 
-func (c *Database) HCount(ctx context.Context, condition MustKV, opts ...*options.CountOptions) *CountResult {
+func (c *DbExecutor) HUpdateMany(ctx context.Context, condition, update MustKV, opts ...*options.UpdateOptions) *UpdateResult {
 	switch d := condition.(type) {
 	case Doc:
-		return c.Col(d.DocName()).HCount(ctx, condition, opts...)
+		return c.Col(d.DocName()).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HUpdateMany(ctx, condition, update, opts...)
 	case QueryFc:
 		cond, table := d()
-		return c.Col(table).HCount(ctx, cond, opts...)
+		return c.Col(table).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HUpdateMany(ctx, cond, update, opts...)
 	default:
-		return c.Col(condition).HCount(ctx, condition, opts...)
+		return c.Col(condition).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HUpdateMany(ctx, condition, update, opts...)
 	}
 }
 
-func (c *Database) HDeleteOne(ctx context.Context, condition MustKV, opts ...*options.DeleteOptions) *DeleteResult {
+func (c *DbExecutor) HCount(ctx context.Context, condition MustKV, opts ...*options.CountOptions) *CountResult {
 	switch d := condition.(type) {
 	case Doc:
-		return c.Col(d.DocName()).HDeleteOne(ctx, condition, opts...)
+		return c.Col(d.DocName()).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HCount(ctx, condition, opts...)
 	case QueryFc:
 		cond, table := d()
-		return c.Col(table).HDeleteOne(ctx, cond, opts...)
+		return c.Col(table).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HCount(ctx, cond, opts...)
 	default:
-		return c.Col(condition).HDeleteOne(ctx, condition, opts...)
+		return c.Col(condition).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HCount(ctx, condition, opts...)
 	}
 }
 
-func (c *Database) HDeleteMany(ctx context.Context, condition MustKV, opts ...*options.DeleteOptions) *DeleteResult {
+func (c *DbExecutor) HDeleteOne(ctx context.Context, condition MustKV, opts ...*options.DeleteOptions) *DeleteResult {
 	switch d := condition.(type) {
 	case Doc:
-		return c.Col(d.DocName()).HDeleteMany(ctx, condition, opts...)
+		return c.Col(d.DocName()).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HDeleteOne(ctx, condition, opts...)
 	case QueryFc:
 		cond, table := d()
-		return c.Col(table).HDeleteMany(ctx, cond, opts...)
+		return c.Col(table).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HDeleteOne(ctx, cond, opts...)
 	default:
-		return c.Col(condition).HDeleteMany(ctx, condition, opts...)
+		return c.Col(condition).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HDeleteOne(ctx, condition, opts...)
 	}
 }
 
-func (c *Database) HReplaceOne(ctx context.Context, condition, newDoc MustKV, opts ...*options.ReplaceOptions) *UpdateResult {
+func (c *DbExecutor) HDeleteMany(ctx context.Context, condition MustKV, opts ...*options.DeleteOptions) *DeleteResult {
 	switch d := condition.(type) {
 	case Doc:
-		return c.Col(d.DocName()).HReplaceOne(ctx, condition, newDoc, opts...)
+		return c.Col(d.DocName()).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HDeleteMany(ctx, condition, opts...)
 	case QueryFc:
 		cond, table := d()
-		return c.Col(table).HReplaceOne(ctx, cond, newDoc, opts...)
+		return c.Col(table).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HDeleteMany(ctx, cond, opts...)
 	default:
-		return c.Col(newDoc).HReplaceOne(ctx, condition, newDoc, opts...)
+		return c.Col(condition).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HDeleteMany(ctx, condition, opts...)
+	}
+}
+
+func (c *DbExecutor) HReplaceOne(ctx context.Context, condition, newDoc MustKV, opts ...*options.ReplaceOptions) *UpdateResult {
+	switch d := condition.(type) {
+	case Doc:
+		return c.Col(d.DocName()).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HReplaceOne(ctx, condition, newDoc, opts...)
+	case QueryFc:
+		cond, table := d()
+		return c.Col(table).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HReplaceOne(ctx, cond, newDoc, opts...)
+	default:
+		return c.Col(condition).SetFindOptions(*c.f).SetUpdateOptions(*c.u).HReplaceOne(ctx, condition, newDoc, opts...)
 	}
 }

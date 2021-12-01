@@ -19,3 +19,13 @@ func (f TableNameFormat) apply(options *Options) {
 func WithTableNameFormat(format TableNameFormat) Option {
 	return format
 }
+
+type DebugType bool
+
+func (d DebugType) apply(options *Options) {
+	options.debug = bool(d)
+}
+
+func WithDebug(b bool) Option {
+	return DebugType(b)
+}

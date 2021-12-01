@@ -18,6 +18,7 @@ type FieldNameFormat func(name string) string
 type Options struct {
 	tableNameFc TableNameFormat
 	fieldNameFc FieldNameFormat
+	debug       bool
 }
 
 type Database struct {

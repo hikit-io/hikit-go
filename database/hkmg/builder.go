@@ -2,9 +2,10 @@ package hkmg
 
 import (
 	"fmt"
+	"sync"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"sync"
 )
 
 var (
@@ -306,6 +307,11 @@ type BuilderOrFc = interface{}
 
 func (b *Builder) Or(bs *Builder) *Builder {
 	b.logicFields[LogicOp.Or] = append(b.logicFields[LogicOp.Or], bs.Filter())
+	return b
+}
+
+func (b *Builder) or(bs bson.D) *Builder {
+	b.logicFields[LogicOp.Or] = append(b.logicFields[LogicOp.Or], bs)
 	return b
 }
 

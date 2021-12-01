@@ -9,7 +9,7 @@ For MongoDB
 
 ## Getting start
 
-`go get github.com/hfunc/hfunc-go/hfdatabase/hfmongo`
+`go get go.hikit.io/database/hfmg`
 
 ### Usage
 
@@ -21,6 +21,7 @@ package main
 
 import (
 	"context"
+	
 	"go.hikit.io/database/hkmg"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -31,10 +32,10 @@ func main() {
 	col := db.Collection("test")
 	builder := hkmg.NewBuilder()
 	builder.Field("name").Equal("nekilc")
-	buidler.Field("age").LessThan(100)
+	builder.Field("age").LessThan(100)
 	builder.Skip(0).Limit(2)
 	col.Find(ctx,builder.Filter(),builder.FindOpts())
-	buidler.Field("age").Set(200)
+	builder.Field("age").Set(200)
 	col.Update(ctx,builder.Filter(), builder.Update(),builder.UpOpts())
 }
 ```
@@ -112,9 +113,9 @@ func main() {
 	// ------- Logic Start---------
 	orBd := hkmg.NewBuilder()
 	orBd.Field("age").Equal(11)
-	orBd.Field("name").Equal("hfunc")
+	orBd.Field("name").Equal("hikit")
 	orBd2 := hkmg.NewBuilder()
-	orBd2.Field("name").Equal("hfunc1")
+	orBd2.Field("name").Equal("hikit1")
 	// At the same level
 	builder.Or(orBd).Or(orBd2)
 	// At the different level
@@ -131,23 +132,23 @@ You can replace the above Logic code block with the following code:
 // At the same level
 builder.OrFc(func(bd *hfmongo.Builder){
 	bd.Field("age").Equal(11)
-    bd.Field("name").Equal("hfunc")
+    bd.Field("name").Equal("hikit")
 }).OrFc(func(bd *hfmongo.Builder){
-    bd.Field("name").Equal("hfunc1")
+    bd.Field("name").Equal("hikit1")
 })
 // At the different level
 builder.OrFc(func(bd *hfmongo.Builder){
     bd.Field("age").Equal(11)
-    bd.Field("name").Equal("hfunc")
+    bd.Field("name").Equal("hikit")
 	bd.OrFc(func(bd *hfmongo.Builder){
-        bd.Field("name").Equal("hfunc1")
+        bd.Field("name").Equal("hikit1")
     })
 })
 ```
 MongoDB Find Statement:
 ```genericsql
 -- At the same level
-db.test.Find({$or:[{age:11,name:"hfunc"},{name:"func1"}]})
+db.test.Find({$or:[{age:11,name:"hikit"},{name:"func1"}]})
 -- At the different level
-db.test.Find({$or:[{age:11,name:"hfunc",$or:[{name:"hfunc1"}]}]})
+db.test.Find({$or:[{age:11,name:"hikit",$or:[{name:"hikit1"}]}]})
 ```
