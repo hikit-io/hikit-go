@@ -28,6 +28,15 @@ func (c *Executor) SetUpdateOptions(o options.UpdateOptions) *Executor {
 	return c
 }
 
+func (c *Executor) SetFindOptions(o options.FindOptions) *Executor {
+	c.FindOptions = &o
+	return c
+}
+func (c *Executor) SetUpdateOptions(o options.UpdateOptions) *Executor {
+	c.UpdateOptions = &o
+	return c
+}
+
 func (c *Executor) HInsertOne(ctx context.Context, doc MustKV, opts ...*options.InsertOneOptions) *InsertOneResult {
 	var (
 		startTs int64
