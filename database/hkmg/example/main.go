@@ -104,4 +104,10 @@ func main() {
 
 	}
 	fmt.Println(querySturct)
+	id, _ := primitive.ObjectIDFromHex("61a649a0fbaae26c42caea54")
+	u := User{
+		ID: id,
+	}
+	db.Exec().HFindOne(ctx, u, &u)
+	fmt.Println(u)
 }
