@@ -448,11 +448,11 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 		if rft.Kind() == reflect.Struct {
 			for i := 0; i < rft.NumField(); i++ {
 				if rfv.Field(i).Kind() == reflect.Ptr {
-					if rfv.FieldByName(rft.Field(i).Name).IsZero() || rfv.FieldByName(rft.Field(i).Name).IsNil() {
+					if (rfv.FieldByName(rft.Field(i).Name).IsZero() || rfv.FieldByName(rft.Field(i).Name).IsNil()) && pt != Projection {
 						continue
 					}
 				}
-				if rfv.FieldByName(rft.Field(i).Name).IsZero() {
+				if rfv.FieldByName(rft.Field(i).Name).IsZero() && pt != Projection {
 					continue
 				}
 				v, ok := rft.Field(i).Tag.Lookup("bson")
