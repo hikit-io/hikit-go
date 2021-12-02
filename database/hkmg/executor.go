@@ -454,7 +454,6 @@ func (b *Builder) parseVal(val MustKV, pt parseType, format FieldNameFormat) *Bu
 		}
 		if rft.Kind() == reflect.Ptr {
 			rft = rft.Elem()
-			rfv = rfv.Elem()
 		}
 		if rft.Kind() == reflect.Struct {
 			for i := 0; i < rft.NumField(); i++ {
