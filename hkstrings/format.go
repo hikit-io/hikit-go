@@ -6,7 +6,7 @@ import (
 	"unicode"
 )
 
-func ToUnder(s string) string {
+func ToUnderScoreCase(s string) string {
 	buffer := bytes.NewBuffer(nil)
 	for i, r := range s {
 		if unicode.IsUpper(r) {
@@ -22,7 +22,7 @@ func ToUnder(s string) string {
 	return buffer.String()
 }
 
-func ToCamel(s string) string {
+func ToCamelCase(s string) string {
 	s = strings.Replace(s, "_", " ", -1)
 	s = strings.Title(s)
 	return strings.Replace(s, " ", "", -1)
