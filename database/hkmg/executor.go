@@ -182,7 +182,8 @@ func (c *Executor) HFindOneAndUpdate(ctx context.Context, condition, update Must
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
-				zap.Any("statement", DebugD(filter)),
+				zap.Any("filter", DebugD(filter)),
+				zap.Any("update", DebugD(up)),
 				zap.Any("options", opt),
 			)
 		}()
@@ -229,7 +230,8 @@ func (c *Executor) HFindOneAndReplace(ctx context.Context, condition, replace Mu
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
-				zap.Any("statement", DebugD(filter)),
+				zap.Any("filter", DebugD(filter)),
+				zap.Any("update", replace),
 				zap.Any("options", opt),
 			)
 		}()
@@ -536,7 +538,7 @@ func (c *Executor) HFind(ctx context.Context, condition MustKV, res MustSlicePtr
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
-				zap.Any("statement", DebugD(filter)),
+				zap.Any("filter", DebugD(filter)),
 				zap.Any("options", opt),
 			)
 		}()
@@ -569,7 +571,9 @@ func (c *Executor) HUpdateOne(ctx context.Context, condition, update MustKV, opt
 
 	filter := builder.Filter()
 	up := builder.Update()
-
+	if c.opt.debug {
+		parseTs = time.Now().UnixNano()
+	}
 	cur, e := c.parent.UpdateOne(ctx, filter, up, opt)
 	if c.opt.debug {
 		accessTs = time.Now().UnixNano()
@@ -580,7 +584,8 @@ func (c *Executor) HUpdateOne(ctx context.Context, condition, update MustKV, opt
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
-				zap.Any("statement", DebugD(filter)),
+				zap.Any("filter", DebugD(filter)),
+				zap.Any("update", DebugD(up)),
 				zap.Any("options", opt),
 			)
 		}()
@@ -622,7 +627,8 @@ func (c *Executor) HUpdateMany(ctx context.Context, condition, update MustKV, op
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
-				zap.Any("statement", DebugD(filter)),
+				zap.Any("filter", DebugD(filter)),
+				zap.Any("update", DebugD(up)),
 				zap.Any("options", opt),
 			)
 		}()
@@ -663,7 +669,7 @@ func (c *Executor) HCount(ctx context.Context, condition MustKV, opts ...*option
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
-				zap.Any("statement", DebugD(filter)),
+				zap.Any("filter", DebugD(filter)),
 				zap.Any("options", opt),
 			)
 		}()
@@ -704,7 +710,7 @@ func (c *Executor) HDeleteOne(ctx context.Context, condition MustKV, opts ...*op
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
-				zap.Any("statement", DebugD(filter)),
+				zap.Any("filter", DebugD(filter)),
 				zap.Any("options", opt),
 			)
 		}()
@@ -746,7 +752,7 @@ func (c *Executor) HDeleteMany(ctx context.Context, condition MustKV, opts ...*o
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
-				zap.Any("statement", DebugD(filter)),
+				zap.Any("filter", DebugD(filter)),
 				zap.Any("options", opt),
 			)
 		}()
@@ -787,7 +793,7 @@ func (c *Executor) HReplaceOne(ctx context.Context, condition, newDoc MustKV, op
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
-				zap.Any("statement", DebugD(filter)),
+				zap.Any("filter", DebugD(filter)),
 				zap.Any("options", opt),
 			)
 		}()
