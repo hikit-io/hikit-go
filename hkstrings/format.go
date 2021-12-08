@@ -25,5 +25,6 @@ func ToUnderScoreCase(s string) string {
 func ToCamelCase(s string) string {
 	s = strings.Replace(s, "_", " ", -1)
 	s = strings.Title(s)
+	s = strings.Replace(s, string(s[0]), string(s[0]+32), 1)
 	return strings.Replace(s, " ", "", -1)
 }
