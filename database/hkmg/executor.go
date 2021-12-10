@@ -12,8 +12,8 @@ import (
 )
 
 type Executor struct {
-	opt    *Options
-	parent *Collection
+	opt *Options
+	*Collection
 	*options.FindOptions
 	*options.UpdateOptions
 }
@@ -32,12 +32,12 @@ func (c *Executor) HInsertOne(ctx context.Context, doc MustKV, opts ...*options.
 		startTs int64
 		endTs   int64
 	)
-	r, e := c.parent.InsertOne(ctx, doc, opts...)
+	r, e := c.InsertOne(ctx, doc, opts...)
 	if c.opt.debug {
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.Any("options", opts),
 			)
@@ -65,13 +65,13 @@ func (c *Executor) HInsertMany(ctx context.Context, docs MustKV, opts ...*option
 		idocs = AnyToSliceAny(docs)
 	}
 	parseTs = time.Now().UnixNano()
-	r, e := c.parent.InsertMany(ctx, idocs, opts...)
+	r, e := c.InsertMany(ctx, idocs, opts...)
 	if c.opt.debug {
 		accessTs = time.Now().UnixNano()
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
@@ -119,7 +119,7 @@ func (c *Executor) HFindOne(ctx context.Context, cond MustKV, res MustPtr, opts 
 	if c.opt.debug {
 		parseTs = time.Now().UnixNano()
 	}
-	r := c.parent.FindOne(ctx, filter, opt)
+	r := c.FindOne(ctx, filter, opt)
 	if c.opt.debug {
 		accessTs = time.Now().UnixNano()
 	}
@@ -127,7 +127,7 @@ func (c *Executor) HFindOne(ctx context.Context, cond MustKV, res MustPtr, opts 
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
@@ -169,7 +169,7 @@ func (c *Executor) HFindOneAndUpdate(ctx context.Context, condition, update Must
 	if c.opt.debug {
 		parseTs = time.Now().UnixNano()
 	}
-	r := c.parent.FindOneAndUpdate(ctx,
+	r := c.FindOneAndUpdate(ctx,
 		filter, up,
 		opt,
 	)
@@ -178,7 +178,7 @@ func (c *Executor) HFindOneAndUpdate(ctx context.Context, condition, update Must
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
@@ -218,7 +218,7 @@ func (c *Executor) HFindOneAndReplace(ctx context.Context, condition, replace Mu
 	if c.opt.debug {
 		parseTs = time.Now().UnixNano()
 	}
-	r := c.parent.FindOneAndReplace(ctx,
+	r := c.FindOneAndReplace(ctx,
 		filter, replace,
 		opt)
 	if c.opt.debug {
@@ -226,7 +226,7 @@ func (c *Executor) HFindOneAndReplace(ctx context.Context, condition, replace Mu
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
@@ -266,7 +266,7 @@ func (c *Executor) HFindOneAndDelete(ctx context.Context, condition MustKV, dele
 	if c.opt.debug {
 		parseTs = time.Now().UnixNano()
 	}
-	r := c.parent.FindOneAndDelete(ctx,
+	r := c.FindOneAndDelete(ctx,
 		filter,
 		opt,
 	)
@@ -275,7 +275,7 @@ func (c *Executor) HFindOneAndDelete(ctx context.Context, condition MustKV, dele
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
@@ -528,13 +528,13 @@ func (c *Executor) HFind(ctx context.Context, condition MustKV, res MustSlicePtr
 	if c.opt.debug {
 		parseTs = time.Now().UnixNano()
 	}
-	cur, e := c.parent.Find(ctx, builder.Filter(), opt)
+	cur, e := c.Find(ctx, builder.Filter(), opt)
 	if c.opt.debug {
 		accessTs = time.Now().UnixNano()
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
@@ -574,13 +574,13 @@ func (c *Executor) HUpdateOne(ctx context.Context, condition, update MustKV, opt
 	if c.opt.debug {
 		parseTs = time.Now().UnixNano()
 	}
-	cur, e := c.parent.UpdateOne(ctx, filter, up, opt)
+	cur, e := c.UpdateOne(ctx, filter, up, opt)
 	if c.opt.debug {
 		accessTs = time.Now().UnixNano()
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
@@ -617,13 +617,13 @@ func (c *Executor) HUpdateMany(ctx context.Context, condition, update MustKV, op
 	if c.opt.debug {
 		parseTs = time.Now().UnixNano()
 	}
-	cur, e := c.parent.UpdateMany(ctx, filter, up, opt)
+	cur, e := c.UpdateMany(ctx, filter, up, opt)
 	if c.opt.debug {
 		accessTs = time.Now().UnixNano()
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
@@ -659,13 +659,13 @@ func (c *Executor) HCount(ctx context.Context, condition MustKV, opts ...*option
 	if c.opt.debug {
 		parseTs = time.Now().UnixNano()
 	}
-	count, e := c.parent.CountDocuments(ctx, filter, opt)
+	count, e := c.CountDocuments(ctx, filter, opt)
 	if c.opt.debug {
 		accessTs = time.Now().UnixNano()
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
@@ -700,13 +700,13 @@ func (c *Executor) HDeleteOne(ctx context.Context, condition MustKV, opts ...*op
 	if c.opt.debug {
 		parseTs = time.Now().UnixNano()
 	}
-	r, e := c.parent.DeleteOne(ctx, filter, opt)
+	r, e := c.DeleteOne(ctx, filter, opt)
 	if c.opt.debug {
 		accessTs = time.Now().UnixNano()
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
@@ -742,13 +742,13 @@ func (c *Executor) HDeleteMany(ctx context.Context, condition MustKV, opts ...*o
 	if c.opt.debug {
 		parseTs = time.Now().UnixNano()
 	}
-	r, e := c.parent.DeleteMany(ctx, filter, opt)
+	r, e := c.DeleteMany(ctx, filter, opt)
 	if c.opt.debug {
 		accessTs = time.Now().UnixNano()
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
@@ -783,13 +783,13 @@ func (c *Executor) HReplaceOne(ctx context.Context, condition, newDoc MustKV, op
 	if c.opt.debug {
 		parseTs = time.Now().UnixNano()
 	}
-	r, e := c.parent.ReplaceOne(ctx, filter, newDoc, opt)
+	r, e := c.ReplaceOne(ctx, filter, newDoc, opt)
 	if c.opt.debug {
 		accessTs = time.Now().UnixNano()
 		defer func() {
 			endTs = time.Now().UnixNano()
 			hklog.Debug(ctx, "",
-				zap.String("table", c.parent.name),
+				zap.String("table", c.name),
 				zap.String("costTime", time.Duration(endTs-startTs).String()),
 				zap.String("parseTime", time.Duration(parseTs-startTs).String()),
 				zap.String("accessTime", time.Duration(accessTs-parseTs).String()),
