@@ -1,6 +1,6 @@
 # hkmg
 
-For MongoDB
+MongoDB ORM based on official library.
 
 ## Features
 
