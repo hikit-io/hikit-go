@@ -2,7 +2,8 @@
 
 ## Feature
 
-## Example 
+## Example
+
 ```go
 // @title Atlas API
 // @version 1.0
@@ -20,11 +21,11 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.hikit.io/hkctx"
 	"go.hikit.io/hklog"
 	"go.hikit.io/hkutils/hkgin"
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 )
 

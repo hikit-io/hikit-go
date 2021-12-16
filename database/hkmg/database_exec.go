@@ -3,8 +3,9 @@ package hkmg
 import (
 	"context"
 
-	. "go.hikit.io/hktypes"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	. "go.hikit.io/hktypes"
 )
 
 type QueryFc func() (condition interface{}, table interface{})
@@ -53,8 +54,10 @@ func (c *DbExecutor) HInsertMany(ctx context.Context, docs Any, opts ...*options
 }
 
 type DbExecutor struct {
-	f *options.FindOptions
-	u *options.UpdateOptions
+	f              *options.FindOptions
+	u              *options.UpdateOptions
+	opt            Options
+	returnDocument *ReturnDocType
 	*Database
 }
 
@@ -62,6 +65,7 @@ func (c *Database) Exec() *DbExecutor {
 	return &DbExecutor{
 		f:        options.Find(),
 		u:        options.Update(),
+		opt:      c.options,
 		Database: c,
 	}
 }

@@ -1,8 +1,9 @@
 package hkhttp
 
 import (
-	"golang.org/x/oauth2"
 	"net/http"
+
+	"golang.org/x/oauth2"
 )
 
 type TokenHandle func(req *http.Request, token *oauth2.Token)

@@ -1,8 +1,9 @@
 package hkmg
 
 import (
-	. "go.hikit.io/hktypes"
 	"go.mongodb.org/mongo-driver/bson"
+
+	. "go.hikit.io/hktypes"
 )
 
 type FieldName = Str
@@ -73,4 +74,67 @@ func (f *Field) Child(name string) *Field {
 	//}
 	f.chs = append(f.chs, field)
 	return field
+}
+
+func In(val MustSlice) bson.E {
+	return bson.E{
+		Key:   FindOp.In,
+		Value: val,
+	}
+}
+
+func NotIn(val MustSlice) bson.E {
+	return bson.E{
+		Key:   FindOp.NotIn,
+		Value: val,
+	}
+}
+
+func LessThan(val Any) bson.E {
+	return bson.E{
+		Key:   FindOp.LessThan,
+		Value: val,
+	}
+}
+
+func LessThanEqual(val Any) bson.E {
+	return bson.E{
+		Key:   FindOp.LessThanEqual,
+		Value: val,
+	}
+}
+
+func Equal(val Any) bson.E {
+	return bson.E{
+		Key:   FindOp.Equal,
+		Value: val,
+	}
+}
+
+func GreatThan(val Any) bson.E {
+	return bson.E{
+		Key:   FindOp.GreatThan,
+		Value: val,
+	}
+}
+
+func GreatThanEqual(val Any) bson.E {
+	return bson.E{
+		Key:   FindOp.GreatThanEqual,
+		Value: val,
+	}
+}
+
+func All(val MustSlice) bson.E {
+	return bson.E{
+		Key:   FindOp.All,
+		Value: val,
+	}
+}
+
+func Regex(val string) bson.E {
+	return bson.E{
+		Key:   FindOp.Regex,
+		Value: val,
+	}
 }

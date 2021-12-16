@@ -1,8 +1,9 @@
 package hkhttp
 
 import (
-	"golang.org/x/oauth2"
 	"testing"
+
+	"golang.org/x/oauth2"
 )
 
 func TestNewClient(t *testing.T) {

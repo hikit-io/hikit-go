@@ -16,10 +16,11 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
+
 	"go.hikit.io/hkctx"
 	"go.hikit.io/hklog"
 	"go.hikit.io/utils/hkgin"
-	"go.uber.org/zap"
 )
 
 type _Controller struct{}

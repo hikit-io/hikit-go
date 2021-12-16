@@ -1,10 +1,11 @@
 package hkhttp
 
 import (
-	"golang.org/x/oauth2"
 	"net"
 	"net/http"
 	"time"
+
+	"golang.org/x/oauth2"
 )
 
 var (

@@ -1,10 +1,11 @@
 package hkmg
 
 import (
-	. "go.hikit.io/hktypes"
 	"regexp"
 	"strconv"
 	"strings"
+
+	. "go.hikit.io/hktypes"
 )
 
 func (f *Field) LessThan(val Any) *Field {
@@ -45,10 +46,11 @@ func (f *Field) Size(val Ui) *Field {
 	return f.op(FindOp.Size, OpTypeFind, val)
 }
 
-func (f *Field) Exists(val Any) *Field {
+func (f *Field) Exists(val bool) *Field {
 	return f.op(FindOp.Exists, OpTypeFind, val)
 }
 
+//Type todo need type define
 func (f *Field) Type(val Any) *Field {
 	return f.op(FindOp.Type, OpTypeFind, val)
 }
@@ -61,12 +63,39 @@ func (f *Field) Regex(val Str) *Field {
 	return f.op(FindOp.Regex, OpTypeFind, val)
 }
 
-func (f *Field) Text(val Any) *Field {
+type TextField struct {
+	Search             *string `bson:"$search"`
+	Language           *string `bson:"$language"`
+	CaseSensitive      *bool   `bson:"$caseSensitive"`
+	DiacriticSensitive *bool   `bson:"$diacriticSensitive"`
+}
+
+func (f *Field) Text(val TextField) *Field {
 	return f.op(FindOp.Text, OpTypeFind, val)
 }
 
-func (f *Field) ElemMatch(val MustStructOrPtr) *Field {
-	return f.op(FindOp.ElemMatch, OpTypeFind, val)
+func (f *Field) TextFc(fc func(val *TextField)) *Field {
+	tf := &TextField{}
+	fc(tf)
+	return f.op(FindOp.Text, OpTypeFind, tf)
+}
+
+func (f *Field) ElemMatch(val Any) *Field {
+	switch v := val.(type) {
+	case Builder:
+		return f.op(FindOp.ElemMatch, OpTypeFind, v.FindOpts())
+	case *Builder:
+		return f.op(FindOp.ElemMatch, OpTypeFind, v.FindOpts())
+	default:
+		return f.op(FindOp.ElemMatch, OpTypeFind, val)
+	}
+}
+
+func (f *Field) ElemMatchFc(fc func(br *Builder)) *Field {
+	br := NewBuilder()
+	defer br.Free()
+	fc(br)
+	return f.op(FindOp.ElemMatch, OpTypeFind, br.FindOpts())
 }
 
 func (f *Field) Equal(val Any) *Field {
@@ -81,15 +110,18 @@ func (f *Field) Max(val Any) *Field {
 	return f.op(UpdateOp.Max, OpTypeUpdate, val)
 }
 
+var (
+	regexpExpression, _      = regexp.Compile(`^[0-9]+((<)|(<=)|(>)|(>=))\$((<)|(<=)|(>)|(>=))[0-9]+$`)
+	regexpExpressionSplit, _ = regexp.Compile(`(<=)|(>=)|(<)|(>)`)
+)
+
 func (f *Field) Expression(expr string) *Field {
 	expr = strings.ReplaceAll(expr, " ", "")
-	e, _ := regexp.Compile(`^[0-9]+((<)|(<=)|(>)|(>=))\$((<)|(<=)|(>)|(>=))[0-9]+$`)
-	spilt, _ := regexp.Compile(`(<=)|(>=)|(<)|(>)`)
-	if !e.MatchString(expr) {
+	if !regexpExpression.MatchString(expr) {
 		return f
 	}
-	ops := spilt.FindAllString(expr, -1)
-	numbers := spilt.Split(expr, -1)
+	ops := regexpExpressionSplit.FindAllString(expr, -1)
+	numbers := regexpExpressionSplit.Split(expr, -1)
 	if (ops[0] == "<" || ops[0] == "<=") && (ops[1] == "<" || ops[1] == "<=") {
 		pre, _ := strconv.Atoi(numbers[0])
 		sub, _ := strconv.Atoi(numbers[2])

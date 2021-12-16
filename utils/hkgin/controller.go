@@ -1,11 +1,12 @@
 package hkgin
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Controller interface {
