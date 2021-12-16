@@ -1,8 +1,11 @@
 package hkmg
 
 import (
-	"go.hikit.io/hktypes"
+	"time"
+
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"go.hikit.io/hktypes"
 )
 
 type mergeOpts struct {
@@ -147,5 +150,53 @@ const (
 
 func (c *Executor) ReturnDoc(t ReturnDocType) *Executor {
 	c.returnDocument = &t
+	return c
+}
+
+func (c *Executor) MaxTime(d time.Duration) *Executor {
+	c.SetMaxTime(d)
+	return c
+}
+
+func (c *Executor) AllowDiskUse(b bool) *Executor {
+	c.SetAllowDiskUse(b)
+	return c
+}
+
+func (c *Executor) AllowPartialResults(b bool) *Executor {
+	c.SetAllowPartialResults(b)
+	return c
+}
+
+func (c *Executor) MaxAwaitTime(d time.Duration) *Executor {
+	c.SetMaxAwaitTime(d)
+	return c
+}
+
+func (c *Executor) ReturnKey(b bool) *Executor {
+	c.SetReturnKey(b)
+	return c
+}
+
+type CursorType = options.CursorType
+
+const (
+	NonTailable   = options.NonTailable
+	Tailable      = options.Tailable
+	TailableAwait = options.TailableAwait
+)
+
+func (c *Executor) CursorType(ct CursorType) *Executor {
+	c.SetCursorType(ct)
+	return c
+}
+
+func (c *Executor) Comment(comment string) *Executor {
+	c.SetComment(comment)
+	return c
+}
+
+func (c *Executor) NoCursorTimeout(b bool) *Executor {
+	c.SetNoCursorTimeout(b)
 	return c
 }

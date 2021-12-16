@@ -5,10 +5,11 @@ import (
 	"reflect"
 	"time"
 
-	"go.hikit.io/hklog"
-	. "go.hikit.io/hktypes"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
+
+	"go.hikit.io/hklog"
+	. "go.hikit.io/hktypes"
 )
 
 type Executor struct {
@@ -17,15 +18,6 @@ type Executor struct {
 	*options.FindOptions
 	*options.UpdateOptions
 	returnDocument *options.ReturnDocument
-}
-
-func (c *Executor) SetFindOptions(o options.FindOptions) *Executor {
-	c.FindOptions = &o
-	return c
-}
-func (c *Executor) SetUpdateOptions(o options.UpdateOptions) *Executor {
-	c.UpdateOptions = &o
-	return c
 }
 
 func (c *Executor) SetFindOptions(o options.FindOptions) *Executor {
@@ -169,10 +161,14 @@ func (c *Executor) HFindOneAndUpdate(ctx context.Context, condition, update Must
 		startTs = time.Now().UnixNano()
 	}
 
-	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc).parseVal(update, Update, c.opt.fieldNameFc).parseVal(updateRes, Projection, c.opt.fieldNameFc)
+	builder := NewBuilder().
+		parseVal(condition, Find, c.opt.fieldNameFc).
+		parseVal(update, Update, c.opt.fieldNameFc).
+		parseVal(updateRes, Projection, c.opt.fieldNameFc)
+
 	opt := options.MergeFindOneAndUpdateOptions(append(opts,
 		mergeOpts{f: builder.FindOpts(), u: builder.UpOpts()}.ToFindOneAndUpdateOptions(),
-		mergeOpts{f: c.FindOptions, u: c.UpdateOptions}.ToFindOneAndUpdateOptions(),
+		mergeOpts{f: c.FindOptions, u: c.UpdateOptions, returnDocument: c.returnDocument}.ToFindOneAndUpdateOptions(),
 	)...)
 	filter := builder.Filter()
 	up := builder.Update()
@@ -222,7 +218,7 @@ func (c *Executor) HFindOneAndReplace(ctx context.Context, condition, replace Mu
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc).parseVal(res, Projection, c.opt.fieldNameFc)
 	opt := options.MergeFindOneAndReplaceOptions(append(opts,
 		mergeOpts{f: builder.FindOpts(), u: builder.UpOpts()}.ToFindOneAndReplaceOptions(),
-		mergeOpts{f: c.FindOptions, u: c.UpdateOptions}.ToFindOneAndReplaceOptions(),
+		mergeOpts{f: c.FindOptions, u: c.UpdateOptions, returnDocument: c.returnDocument}.ToFindOneAndReplaceOptions(),
 	)...)
 	filter := builder.Filter()
 	if c.opt.debug {
@@ -270,7 +266,7 @@ func (c *Executor) HFindOneAndDelete(ctx context.Context, condition MustKV, dele
 	builder := NewBuilder().parseVal(condition, Find, c.opt.fieldNameFc).parseVal(deleteRes, Projection, c.opt.fieldNameFc)
 	opt := options.MergeFindOneAndDeleteOptions(append(opts,
 		mergeOpts{f: builder.FindOpts()}.ToFindOneAndDeleteOptions(),
-		mergeOpts{f: c.FindOptions}.ToFindOneAndDeleteOptions(),
+		mergeOpts{f: c.FindOptions, returnDocument: c.returnDocument}.ToFindOneAndDeleteOptions(),
 	)...)
 	filter := builder.Filter()
 	if c.opt.debug {

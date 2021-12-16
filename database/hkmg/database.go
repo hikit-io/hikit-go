@@ -4,10 +4,11 @@ import (
 	"context"
 	"reflect"
 
-	. "go.hikit.io/hktypes"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	. "go.hikit.io/hktypes"
 )
 
 type TableName = string

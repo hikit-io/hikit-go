@@ -1,8 +1,9 @@
 package hkgin
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 var TraceKey = "trace_id"

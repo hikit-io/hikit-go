@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"go.hikit.io/database/hkmg"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"go.hikit.io/database/hkmg"
 )
 
 type User struct {

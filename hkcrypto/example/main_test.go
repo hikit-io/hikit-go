@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"go.hikit.io/hkcrypto"
 	"testing"
+
+	"go.hikit.io/hkcrypto"
 )
 
 func Test_example(t *testing.T) {

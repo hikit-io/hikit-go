@@ -56,43 +56,42 @@ package main
 
 import (
 	"context"
+
 	"go.hikit.io/database/hkmg"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Test struct {
 	Name string `bson:"name"`
-	Age int32 `bson:"age"`
+	Age  int32  `bson:"age"`
 }
 
 func main() {
 	ctx := context.Background()
 	cli, _ := mongo.NewClient()
-	db := hkmg.NewDB(cli,"test")
-	res := &Test{Name:"nekilc"}
+	db := hkmg.NewDB(cli, "test")
+	res := &Test{Name: "nekilc"}
 	col := db.Col(res)
-	findOneRes := col.HFindOne(ctx,res,res)
-	if findOneRes.Err()!=nil{
-		
-    }
-	if findOneRes.ExceptNoDocuments()!=nil{
-		
-    }
+	findOneRes := col.HFindOne(ctx, res, res)
+	if findOneRes.Err() != nil {
+
+	}
+	if findOneRes.ExceptNoDocuments() != nil {
+
+	}
 	// Or
 	ress := &[]Test{}
 	bd := hkmg.NewBuilder()
 	bd.Field("name").Equal("nekilc")
 	bd.Limit(2)
-	findRes := col.HFind(ctx,bd,ress)
-	if findRes.Err()!=nil{
-        
-	}
-	if findRes.ExceptNoDocuments()!=nil{
+	findRes := col.HFind(ctx, bd, ress)
+	if findRes.Err() != nil {
 
 	}
-	
-	
-	
+	if findRes.ExceptNoDocuments() != nil {
+
+	}
+
 }
 ```
 
