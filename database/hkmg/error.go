@@ -15,7 +15,7 @@ type err struct {
 }
 
 func (e err) IsNoDocuments() bool {
-	if IsErrNoDocuments(e) {
+	if IsErrNoDocuments(e.error) {
 		return true
 	}
 	return false
@@ -25,7 +25,7 @@ func (e err) ExceptNoDocuments() error {
 	if e.IsNoDocuments() {
 		return nil
 	}
-	return e
+	return e.error
 }
 
 func (e err) NotNil() bool {
