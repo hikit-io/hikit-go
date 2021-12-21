@@ -572,7 +572,7 @@ func (c *Executor) HFind(ctx context.Context, condition MustKV, res MustSlicePtr
 	if c.opt.debug {
 		parseTs = time.Now().UnixNano()
 	}
-	cur, e := c.Find(ctx, builder.Filter(), opt)
+	cur, e := c.Find(ctx, filter, opt)
 	if c.opt.debug {
 		accessTs = time.Now().UnixNano()
 		defer func() {
