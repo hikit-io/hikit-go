@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	. "go.hikit.io/hktypes"
 )
 
@@ -59,8 +61,8 @@ func (f *Field) Mod(val Any) *Field {
 	return f.op(FindOp.Mod, OpTypeFind, val)
 }
 
-func (f *Field) Regex(val Str) *Field {
-	return f.op(FindOp.Regex, OpTypeFind, val)
+func (f *Field) Regex(p, opt Str) *Field {
+	return f.op(FindOp.Regex, OpTypeFind, primitive.Regex{Pattern: p, Options: opt})
 }
 
 type TextField struct {
