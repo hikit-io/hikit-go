@@ -2,6 +2,7 @@ package hkmg
 
 import (
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	. "go.hikit.io/hktypes"
 )
@@ -132,9 +133,12 @@ func All(val MustSlice) bson.E {
 	}
 }
 
-func Regex(val string) bson.E {
+func Regex(p, opt string) bson.E {
 	return bson.E{
-		Key:   FindOp.Regex,
-		Value: val,
+		Key: FindOp.Regex,
+		Value: primitive.Regex{
+			Pattern: p,
+			Options: opt,
+		},
 	}
 }
