@@ -31,7 +31,7 @@ func NewServer(opts ...ServerOption) *http.Server {
 }
 
 func Serve(opts ...ServerOption) error {
-	httpServer := NewServer()
+	httpServer := NewServer(opts...)
 	quicServer := &http3.Server{
 		Server: httpServer,
 	}
