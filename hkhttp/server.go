@@ -9,7 +9,9 @@ import (
 )
 
 func NewServer(opts ...ServerOption) *http.Server {
-	options := &serverOptions{}
+	options := &serverOptions{
+		tlsConfig: GenTLSConfigNoErr(),
+	}
 	for _, opt := range opts {
 		opt.apply(options)
 	}
