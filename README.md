@@ -4,3 +4,4 @@
 
 You can quickly write back-end code through hfunc-go.
 
+    go get go.hikit.io
