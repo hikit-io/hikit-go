@@ -1,6 +1,8 @@
 package hkhttp
 
 import (
+	"crypto/tls"
+	"net"
 	"net/http"
 
 	"github.com/lucas-clemente/quic-go/http3"
@@ -28,7 +30,7 @@ func NewServer(opts ...ServerOption) *http.Server {
 	}
 }
 
-func Serve() error {
+func Serve(opts ...ServerOption) error {
 	httpServer := NewServer()
 	quicServer := &http3.Server{
 		Server: httpServer,
@@ -42,7 +44,12 @@ func Serve() error {
 	hErr := make(chan error)
 	qErr := make(chan error)
 	go func() {
-		//hErr <- ListenTLS(httpServer)
+		tcpConn, err := net.Listen("tcp", httpServer.Addr)
+		if err != nil {
+			return
+		}
+		tlsConn := tls.NewListener(tcpConn, httpServer.TLSConfig)
+		hErr <- httpServer.Serve(tlsConn)
 	}()
 	go func() {
 		qErr <- quicServer.ListenAndServe()
