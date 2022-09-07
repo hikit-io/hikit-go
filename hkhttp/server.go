@@ -34,10 +34,48 @@ func NewServer(opts ...ServerOption) *http.Server {
 
 func Serve(opts ...ServerOption) error {
 	httpServer := NewServer(opts...)
-	quicServer := &http3.Server{
-		Server: httpServer,
-	}
+
+	addr := httpServer.Addr
 	handler := httpServer.Handler
+
+	config := httpServer.TLSConfig
+
+	if addr == "" {
+		addr = ":https"
+	}
+
+	// Open the listeners
+	udpAddr, err := net.ResolveUDPAddr("udp", addr)
+	if err != nil {
+		return err
+	}
+	udpConn, err := net.ListenUDP("udp", udpAddr)
+	if err != nil {
+		return err
+	}
+	defer udpConn.Close()
+
+	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	if err != nil {
+		return err
+	}
+	tcpConn, err := net.ListenTCP("tcp", tcpAddr)
+	if err != nil {
+		return err
+	}
+	defer tcpConn.Close()
+
+	tlsConn := tls.NewListener(tcpConn, config)
+	defer tlsConn.Close()
+
+	if handler == nil {
+		handler = http.DefaultServeMux
+	}
+	// Start the servers
+	quicServer := &http3.Server{
+		TLSConfig: config,
+		Handler:   handler,
+	}
 	httpServer.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		quicServer.SetQuicHeaders(w.Header())
 		handler.ServeHTTP(w, r)
@@ -46,15 +84,10 @@ func Serve(opts ...ServerOption) error {
 	hErr := make(chan error)
 	qErr := make(chan error)
 	go func() {
-		tcpConn, err := net.Listen("tcp", httpServer.Addr)
-		if err != nil {
-			return
-		}
-		tlsConn := tls.NewListener(tcpConn, httpServer.TLSConfig)
 		hErr <- httpServer.Serve(tlsConn)
 	}()
 	go func() {
-		qErr <- quicServer.ListenAndServe()
+		qErr <- quicServer.Serve(udpConn)
 	}()
 
 	select {

@@ -13,5 +13,4 @@ require (
 	go.mongodb.org/mongo-driver v1.7.2
 	go.uber.org/zap v1.19.1
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
-	golang.org/x/tools v0.1.5
 )
